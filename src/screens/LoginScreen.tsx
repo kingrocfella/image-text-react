@@ -84,6 +84,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
+              testID="email-input"
             />
             {emailError && <Text style={styles.errorText}>{emailError}</Text>}
           </View>
@@ -102,10 +103,13 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
                 }}
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
+                testID="password-input"
               />
               <TouchableOpacity
                 style={styles.eyeIcon}
                 onPress={() => setShowPassword(!showPassword)}
+                accessibilityRole="button"
+                testID="toggle-password-visibility"
               >
                 <Ionicons
                   name={showPassword ? 'eye-off' : 'eye'}
@@ -121,6 +125,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
             style={[styles.button, loading && styles.buttonDisabled]}
             onPress={handleLogin}
             disabled={loading}
+            testID="login-button"
           >
             {loading ? (
               <ActivityIndicator color="#fff" />
@@ -132,6 +137,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
           <TouchableOpacity
             style={styles.linkButton}
             onPress={() => navigation.navigate('Register')}
+            testID="register-link"
           >
             <Text style={styles.linkText}>
               Don't have an account? <Text style={styles.linkTextBold}>Register</Text>

@@ -14,25 +14,12 @@ import { StatusBar } from 'expo-status-bar';
 import * as Clipboard from 'expo-clipboard';
 import { Ionicons } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAppDispatch, useAppSelector } from '../store';
 import { logout } from '../store/actions/authActions';
 import { extractText, clearExtractedText } from '../store/actions/imageActions';
 import ImagePickerComponent from '../components/ImagePickerComponent';
 
-type RootStackParamList = {
-  Login: undefined;
-  Register: undefined;
-  Home: undefined;
-};
-
-type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
-
-interface Props {
-  navigation: HomeScreenNavigationProp;
-}
-
-const HomeScreen: React.FC<Props> = () => {
+const HomeScreen: React.FC = () => {
   const dispatch = useAppDispatch();
   const { user, accessToken, tokenType } = useAppSelector((state) => state.auth);
   const { extractedText, extracting } = useAppSelector((state) => state.image);
@@ -91,10 +78,19 @@ const HomeScreen: React.FC<Props> = () => {
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <View style={styles.headerLeft}>
-            <Text style={styles.title}>Image to Text App</Text>
-            {user && <Text style={styles.userName}>Welcome, {user.name}!</Text>}
+            <Text style={styles.title} testID="app-title">Image to Text App</Text>
+            {user && (
+              <Text style={styles.userName} testID="welcome-text">
+                Welcome, {user.name}!
+              </Text>
+            )}
           </View>
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <TouchableOpacity
+            style={styles.logoutButton}
+            onPress={handleLogout}
+            accessibilityRole="button"
+            testID="logout-button"
+          >
             <Text style={styles.logoutText}>Logout</Text>
           </TouchableOpacity>
         </View>
@@ -103,7 +99,7 @@ const HomeScreen: React.FC<Props> = () => {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {image ? (
           <View style={styles.previewContainer}>
-            <Image source={{ uri: image }} style={styles.image} />
+            <Image source={{ uri: image }} style={styles.image} testID="image-preview" />
             {!extractedText && (
               <View style={styles.extractButtonContainer}>
                 <Button
@@ -115,7 +111,7 @@ const HomeScreen: React.FC<Props> = () => {
             )}
             {extracting && (
               <View style={styles.loader}>
-                <ActivityIndicator size="large" color="#007AFF" />
+                <ActivityIndicator size="large" color="#007AFF" testID="extract-loader" />
               </View>
             )}
             {extractedText && (
@@ -126,11 +122,15 @@ const HomeScreen: React.FC<Props> = () => {
                     <TouchableOpacity
                       style={styles.copyButton}
                       onPress={handleCopyText}
+                      accessibilityRole="button"
+                      testID="copy-button"
                     >
                       <Ionicons name="copy-outline" size={20} color="#007AFF" />
                     </TouchableOpacity>
                   </View>
-                  <Text style={styles.extractedText}>{extractedText}</Text>
+                  <Text style={styles.extractedText} testID="extracted-text">
+                    {extractedText}
+                  </Text>
                 </View>
                 <View style={styles.extractAnotherContainer}>
                   <Button

@@ -58,37 +58,52 @@ npm start
 ## Project Structure
 
 ```
-├── App.tsx                 # Main app entry point with Redux Provider and Toast
-├── config.ts               # API configuration (reads from .env)
-├── env.d.ts                # TypeScript declarations for environment variables
-├── .env                    # Environment variables (API_BASE_URL)
-├── babel.config.js         # Babel configuration with dotenv plugin
+├── App.tsx                       # App entry point with Redux Provider and Toast
+├── app.json                      # Expo configuration with permissions
+├── app.apk                       # Android build artifact (optional)
+├── assets/                       # Static assets (icons, splash screen)
+│   ├── adaptive-icon.png
+│   ├── favicon.png
+│   ├── icon.png
+│   └── splash.png
+├── babel.config.js               # Babel configuration with dotenv plugin
+├── config.ts                     # API configuration (reads from .env)
+├── eas.json                      # EAS build configuration
+├── env.d.ts                      # Type definitions for environment variables
+├── jest.config.js                # Jest configuration for Expo/React Native
+├── package.json                  # Dependencies and scripts
+├── package-lock.json             # Lockfile
+├── README.md
 ├── src/
 │   ├── components/
-│   │   └── ImagePickerComponent.tsx  # Reusable camera/gallery picker
+│   │   └── ImagePickerComponent.tsx
 │   ├── navigation/
-│   │   └── AppNavigator.tsx          # Navigation setup with auth guards
+│   │   └── AppNavigator.tsx
 │   ├── screens/
-│   │   ├── LoginScreen.tsx           # Login screen with validation
-│   │   ├── RegisterScreen.tsx       # Register screen with validation
-│   │   └── HomeScreen.tsx           # Home screen with text extraction
+│   │   ├── __tests__/            # Screen unit tests
+│   │   │   ├── HomeScreen.test.tsx
+│   │   │   ├── LoginScreen.test.tsx
+│   │   │   └── RegisterScreen.test.tsx
+│   │   ├── HomeScreen.tsx
+│   │   ├── LoginScreen.tsx
+│   │   └── RegisterScreen.tsx
 │   ├── store/
-│   │   ├── index.ts                 # Redux store configuration
 │   │   ├── actions/
-│   │   │   ├── authActions.ts       # Auth actions with thunks
-│   │   │   └── imageActions.ts      # Image/text extraction actions
+│   │   │   ├── authActions.ts
+│   │   │   └── imageActions.ts
 │   │   ├── reducers/
-│   │   │   ├── index.ts             # Root reducer
-│   │   │   ├── authReducer.ts       # Auth reducer
-│   │   │   └── imageReducer.ts      # Image/text extraction reducer
-│   │   └── types/
-│   │       ├── authTypes.ts         # TypeScript types for auth
-│   │       └── imageTypes.ts        # TypeScript types for image extraction
+│   │   │   ├── authReducer.ts
+│   │   │   ├── imageReducer.ts
+│   │   │   └── index.ts
+│   │   ├── types/
+│   │   │   ├── authTypes.ts
+│   │   │   └── imageTypes.ts
+│   │   └── index.ts              # Redux store configuration and typed hooks
+│   ├── types/                    # Additional shared types (placeholder)
 │   └── utils/
-│       └── validation.ts            # Form validation utilities
-├── app.json                # Expo configuration with permissions
-├── package.json            # Dependencies and scripts
-└── tsconfig.json           # TypeScript configuration
+│       └── validation.ts
+├── tsconfig.json                 # TypeScript configuration
+└── .env                          # Environment variables (not committed; create locally)
 ```
 
 ## API Configuration
@@ -170,6 +185,27 @@ These permissions are configured in `app.json` and will be requested at runtime 
 - `@types/react` - React TypeScript types
 - `@babel/core` - Babel compiler
 - `react-native-dotenv` - Environment variable support
+- `jest` & `jest-expo` - Testing framework for React Native/Expo
+- `@testing-library/react-native` - Testing utilities for React Native
+- `@testing-library/jest-native` - Extended Jest matchers for React Native
+
+## Testing
+
+Unit tests cover the `HomeScreen`, `LoginScreen`, and `RegisterScreen` flows using Jest and React Testing Library for React Native.
+
+```bash
+npm run test
+```
+
+Run individual suites with:
+
+```bash
+npx jest src/screens/__tests__/HomeScreen.test.tsx
+npx jest src/screens/__tests__/LoginScreen.test.tsx
+npx jest src/screens/__tests__/RegisterScreen.test.tsx
+```
+
+The Jest configuration is located in `jest.config.js` and is preconfigured for Expo SDK 54.
 
 ## Technology Stack
 
