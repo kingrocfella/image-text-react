@@ -91,7 +91,7 @@ const HomeScreen: React.FC<Props> = () => {
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <View style={styles.headerLeft}>
-            <Text style={styles.title}>Camera & Upload</Text>
+            <Text style={styles.title}>Image to Text App</Text>
             {user && <Text style={styles.userName}>Welcome, {user.name}!</Text>}
           </View>
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
