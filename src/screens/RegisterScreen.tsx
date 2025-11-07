@@ -95,6 +95,7 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
                   if (nameError) setNameError(null);
                 }}
                 autoCapitalize="words"
+                testID="name-input"
               />
               {nameError && <Text style={styles.errorText}>{nameError}</Text>}
             </View>
@@ -113,6 +114,7 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
+                testID="email-input"
               />
               {emailError && <Text style={styles.errorText}>{emailError}</Text>}
             </View>
@@ -131,10 +133,13 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
                   }}
                   secureTextEntry={!showPassword}
                   autoCapitalize="none"
+                  testID="password-input"
                 />
                 <TouchableOpacity
                   style={styles.eyeIcon}
                   onPress={() => setShowPassword(!showPassword)}
+                  accessibilityRole="button"
+                  testID="toggle-password-visibility"
                 >
                   <Ionicons
                     name={showPassword ? 'eye-off' : 'eye'}
@@ -150,6 +155,7 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
               style={[styles.button, loading && styles.buttonDisabled]}
               onPress={handleRegister}
               disabled={loading}
+              testID="register-button"
             >
               {loading ? (
                 <ActivityIndicator color="#fff" />
@@ -161,6 +167,7 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
             <TouchableOpacity
               style={styles.linkButton}
               onPress={() => navigation.navigate('Login')}
+              testID="login-link"
             >
               <Text style={styles.linkText}>
                 Already have an account? <Text style={styles.linkTextBold}>Login</Text>
