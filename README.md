@@ -6,7 +6,7 @@ A React Native app built with Expo that allows users to extract text from images
 
 - 🔐 **Authentication**: Login and Register screens with form validation
 - 📸 **Camera**: Take pictures using the device camera
-- 🖼️ **Gallery**: Select images from the photo library
+- 🖼️ **Gallery**: Select images from the photo gallery
 - 🔍 **Text Extraction**: Extract text from images using OCR API
 - 📋 **Copy to Clipboard**: Copy extracted text with a single tap
 - 🔄 **Extract Another**: Quick workflow to extract text from multiple images
@@ -34,16 +34,7 @@ Or use Expo's install command to ensure compatible versions:
 npx expo install --fix
 ```
 
-2. Configure your API endpoint:
-   - Create a `.env` file in the root directory (if it doesn't exist)
-   - Add your API base URL:
-     ```
-     API_BASE_URL=http://your-api.com
-     ```
-   - The `.env` file is already in `.gitignore` to keep your credentials safe
-   - **Note**: The backend APIs are hosted on a private server. If you want to fully test out this application, please contact me via my Twitter (X) page: [@KingRocfella](https://x.com/KingRocfella) to request API access.
-
-3. Start the Expo development server:
+2. Start the Expo development server:
 ```bash
 npm start
 ```
@@ -66,10 +57,9 @@ npm start
 │   ├── favicon.png
 │   ├── icon.png
 │   └── splash.png
-├── babel.config.js               # Babel configuration with dotenv plugin
-├── config.ts                     # API configuration (reads from .env)
+├── babel.config.js               # Babel configuration
+├── config.ts                     # API configuration (hard-coded base URL)
 ├── eas.json                      # EAS build configuration
-├── env.d.ts                      # Type definitions for environment variables
 ├── jest.config.js                # Jest configuration for Expo/React Native
 ├── package.json                  # Dependencies and scripts
 ├── package-lock.json             # Lockfile
@@ -80,7 +70,7 @@ npm start
 │   ├── navigation/
 │   │   └── AppNavigator.tsx
 │   ├── screens/
-│   │   ├── __tests__/            # Screen unit tests
+│   │   ├── __tests__/
 │   │   │   ├── HomeScreen.test.tsx
 │   │   │   ├── LoginScreen.test.tsx
 │   │   │   └── RegisterScreen.test.tsx
@@ -103,12 +93,11 @@ npm start
 │   └── utils/
 │       └── validation.ts
 ├── tsconfig.json                 # TypeScript configuration
-└── .env                          # Environment variables (not committed; create locally)
 ```
 
 ## API Configuration
 
-The app makes API calls using `API_BASE_URL` from `.env`:
+The API base URL is defined in `config.ts` and currently points to `https://kingsley-api.name.ng`.
 
 ## Form Validation
 
@@ -184,7 +173,6 @@ These permissions are configured in `app.json` and will be requested at runtime 
 - `typescript` - TypeScript compiler
 - `@types/react` - React TypeScript types
 - `@babel/core` - Babel compiler
-- `react-native-dotenv` - Environment variable support
 - `jest` & `jest-expo` - Testing framework for React Native/Expo
 - `@testing-library/react-native` - Testing utilities for React Native
 - `@testing-library/jest-native` - Extended Jest matchers for React Native
@@ -206,6 +194,16 @@ npx jest src/screens/__tests__/RegisterScreen.test.tsx
 ```
 
 The Jest configuration is located in `jest.config.js` and is preconfigured for Expo SDK 54.
+
+## Deployment
+
+Local EAS preview build:
+
+```bash
+eas build -p android --profile preview --local --output=app.apk
+```
+
+Set any required environment variables in your shell or CI before running the build.
 
 ## Technology Stack
 
