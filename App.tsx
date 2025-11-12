@@ -44,8 +44,9 @@ const customDarkTheme = {
     errorContainer: '#7f1d1d',
     onPrimary: '#111827',
     onSecondary: '#111827',
-    onSurface: '#f9fafb',
-    onBackground: '#f9fafb',
+    onSurface: '#d1d5db',
+    onSurfaceVariant: '#9ca3af',
+    onBackground: '#d1d5db',
     outline: '#374151',
   },
 };

@@ -17,6 +17,7 @@ import {
   IconButton,
   useTheme,
   ActivityIndicator,
+  Menu,
 } from "react-native-paper";
 import Toast from "react-native-toast-message";
 import { useAppDispatch, useAppSelector } from "../store";
@@ -33,6 +34,11 @@ const PdfScreen: React.FC = () => {
   const [pdfUri, setPdfUri] = useState<string | null>(null);
   const [pdfName, setPdfName] = useState<string | null>(null);
   const [query, setQuery] = useState<string>("");
+  const [model, setModel] = useState<string>("");
+  const [modelMenuVisible, setModelMenuVisible] = useState(false);
+  const [modelError, setModelError] = useState<string | null>(null);
+
+  const modelOptions = ["openai", "ollama"];
 
   const handlePickDocument = async () => {
     try {
@@ -66,9 +72,20 @@ const PdfScreen: React.FC = () => {
       return;
     }
 
+    if (!model) {
+      setModelError("Model selection is required");
+      Alert.alert(
+        "Model Required",
+        "Please select a model to use for extraction."
+      );
+      return;
+    }
+
+    setModelError(null);
+
     try {
       await dispatch(
-        extractPdfText(pdfUri, pdfName, query.trim(), accessToken, tokenType)
+        extractPdfText(pdfUri, pdfName, query.trim(), model, accessToken, tokenType)
       );
     } catch (error) {
       Alert.alert(
@@ -103,7 +120,15 @@ const PdfScreen: React.FC = () => {
     setPdfUri(null);
     setPdfName(null);
     setQuery("");
+    setModel("");
+    setModelError(null);
     dispatch(clearExtractedPdfText());
+  };
+
+  const handleModelSelect = (selectedModel: string) => {
+    setModel(selectedModel);
+    setModelMenuVisible(false);
+    setModelError(null);
   };
 
   return (
@@ -142,6 +167,39 @@ const PdfScreen: React.FC = () => {
 
             {!extractedText && (
               <>
+                <View style={styles.modelContainer}>
+                  <Menu
+                    visible={modelMenuVisible}
+                    onDismiss={() => setModelMenuVisible(false)}
+                    anchor={
+                      <Button
+                        mode="outlined"
+                        onPress={() => setModelMenuVisible(true)}
+                        icon="chevron-down"
+                        contentStyle={styles.modelButtonContent}
+                        style={[styles.modelButton, modelError && styles.modelButtonError]}
+                        testID="model-dropdown"
+                      >
+                        {model || "Select Model *"}
+                      </Button>
+                    }
+                  >
+                    {modelOptions.map((option) => (
+                      <Menu.Item
+                        key={option}
+                        onPress={() => handleModelSelect(option)}
+                        title={option.charAt(0).toUpperCase() + option.slice(1)}
+                        testID={`model-option-${option}`}
+                      />
+                    ))}
+                  </Menu>
+                  {modelError && (
+                    <Text variant="labelSmall" style={[styles.errorText, { color: theme.colors.error }]}>
+                      {modelError}
+                    </Text>
+                  )}
+                </View>
+
                 <TextInput
                   label="Ask a question about the PDF uploaded"
                   value={query}
@@ -160,7 +218,7 @@ const PdfScreen: React.FC = () => {
                   icon="text-recognition"
                   onPress={handleExtractText}
                   loading={extracting}
-                  disabled={extracting || !query.trim()}
+                  disabled={extracting || !query.trim() || !model}
                   style={styles.extractButton}
                   contentStyle={styles.buttonContent}
                   testID="extract-pdf-button"
@@ -215,14 +273,14 @@ const PdfScreen: React.FC = () => {
               <View style={styles.welcomeContent}>
                 <IconButton
                   icon="file-document-outline"
-                  iconColor={theme.colors.primary}
+                  iconColor={theme.colors.secondary}
                   size={64}
                   style={styles.welcomeIcon}
                 />
-                <Text variant="headlineSmall" style={{ color: theme.colors.primary, marginBottom: 8, textAlign: 'center' }}>
+                <Text variant="headlineSmall" style={{ color: theme.colors.secondary, marginBottom: 8, textAlign: 'center' }}>
                   Upload PDF
                 </Text>
-                <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant, textAlign: 'center', marginBottom: 24 }}>
+                <Text variant="bodyMedium" style={{ color: theme.colors.tertiary, textAlign: 'center', marginBottom: 24 }}>
                   Select a PDF file to extract text and ask questions
                 </Text>
                 <Button
@@ -292,6 +350,23 @@ const styles = StyleSheet.create({
   },
   pdfIcon: {
     marginBottom: 8,
+  },
+  modelContainer: {
+    marginBottom: 20,
+  },
+  modelButton: {
+    borderRadius: 12,
+  },
+  modelButtonError: {
+    borderColor: '#dc2626',
+  },
+  modelButtonContent: {
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+  },
+  errorText: {
+    marginTop: 4,
+    marginLeft: 4,
   },
   questionInput: {
     marginBottom: 20,

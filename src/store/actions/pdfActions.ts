@@ -24,6 +24,7 @@ export const extractPdfText = (
   pdfUri: string,
   pdfName: string,
   query: string,
+  model: string,
   accessToken: string | null,
   tokenType: string | null
 ): ThunkAction<Promise<void>, RootState, unknown, PdfActionTypes> => {
@@ -40,6 +41,7 @@ export const extractPdfText = (
       } as any);
 
       formData.append("query", query);
+      formData.append("model", model);
 
       const headers: Record<string, string> = {};
 

@@ -38,8 +38,9 @@
     },
     "extra": {
       "eas": {
-        "projectId": "b6afc92a-c226-404e-8988-cebcef5368c6"
+        "projectId": "01ff9db2-9e1f-4524-a218-8998eef6a3ee"
       }
-    }
+    },
+    "owner": "rocfella"
   }
 }
