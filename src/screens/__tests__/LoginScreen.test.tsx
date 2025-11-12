@@ -14,9 +14,52 @@ jest.mock('../../store/actions/authActions', () => ({
   login: jest.fn(),
 }));
 
-jest.mock('@expo/vector-icons', () => ({
-  Ionicons: () => null,
-}));
+jest.mock('react-native-paper', () => {
+  const React = require('react');
+  const { View, Text, TextInput, Button, TouchableOpacity } = require('react-native');
+  return {
+    Text: ({ children, ...props }: any) => <Text {...props}>{children}</Text>,
+    Button: ({ children, onPress, ...props }: any) => (
+      <TouchableOpacity onPress={onPress} {...props}>
+        <Text>{children}</Text>
+      </TouchableOpacity>
+    ),
+    TextInput: ({ onChangeText, value, right, left, ...props }: any) => {
+      const RightIcon = right;
+      const LeftIcon = left;
+      return (
+        <View>
+          <TextInput onChangeText={onChangeText} value={value} {...props} />
+          {LeftIcon && (
+            <View testID="left-icon-adornment">
+              <TouchableOpacity onPress={LeftIcon.props?.onPress}>
+                <Text>LeftIcon</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+          {RightIcon && (
+            <View testID="right-icon-adornment">
+              <TouchableOpacity onPress={RightIcon.props?.onPress} testID="toggle-password-visibility">
+                <Text>RightIcon</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+      );
+    },
+    Surface: ({ children, ...props }: any) => <View {...props}>{children}</View>,
+    useTheme: () => ({
+      colors: {
+        primary: '#374151',
+        background: '#ffffff',
+        surface: '#ffffff',
+        onSurface: '#111827',
+        onSurfaceVariant: '#6b7280',
+        error: '#dc2626',
+      },
+    }),
+  };
+});
 
 const mockDispatch = jest.fn();
 const mockUseAppDispatch = useAppDispatch as jest.Mock;

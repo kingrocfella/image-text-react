@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
 import {
   View,
-  Text,
-  TextInput,
-  TouchableOpacity,
   StyleSheet,
   Alert,
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import {
+  Text,
+  TextInput,
+  Button,
+  Surface,
+  useTheme,
+} from 'react-native-paper';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAppDispatch, useAppSelector } from '../store';
 import { register } from '../store/actions/authActions';
@@ -32,6 +34,7 @@ interface Props {
 const RegisterScreen: React.FC<Props> = ({ navigation }) => {
   const dispatch = useAppDispatch();
   const { loading } = useAppSelector((state) => state.auth);
+  const theme = useTheme();
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -60,7 +63,6 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
 
     try {
       const message = await dispatch(register({ name, email, password }));
-      // Display success message to user
       Alert.alert('Registration Successful', message, [
         {
           text: 'LOGIN',
@@ -75,105 +77,115 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+      >
         <View style={styles.content}>
-          <Text style={styles.title}>Register</Text>
-          <Text style={styles.subtitle}>Create your account</Text>
+          <Surface style={[styles.card, { backgroundColor: theme.colors.surface }]} elevation={2}>
+            <View style={styles.header}>
+              <Text variant="displaySmall" style={[styles.title, { color: theme.colors.primary }]}>
+                Create Account
+              </Text>
+              <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant }}>
+                Sign up to get started
+              </Text>
+            </View>
 
-          <View style={styles.form}>
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Name</Text>
+            <View style={styles.form}>
               <TextInput
-                style={[styles.input, nameError && styles.inputError]}
-                placeholder="Enter your name"
-                placeholderTextColor="#999"
+                label="Name"
                 value={name}
                 onChangeText={(text) => {
                   setName(text);
                   if (nameError) setNameError(null);
                 }}
+                mode="outlined"
                 autoCapitalize="words"
+                left={<TextInput.Icon icon="account" />}
+                error={!!nameError}
+                style={styles.input}
                 testID="name-input"
               />
-              {nameError && <Text style={styles.errorText}>{nameError}</Text>}
-            </View>
+              {nameError && (
+                <Text variant="labelSmall" style={[styles.errorText, { color: theme.colors.error }]}>
+                  {nameError}
+                </Text>
+              )}
 
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Email</Text>
               <TextInput
-                style={[styles.input, emailError && styles.inputError]}
-                placeholder="Enter your email"
-                placeholderTextColor="#999"
+                label="Email"
                 value={email}
                 onChangeText={(text) => {
                   setEmail(text);
                   if (emailError) setEmailError(null);
                 }}
+                mode="outlined"
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
+                error={!!emailError}
+                left={<TextInput.Icon icon="email" />}
+                style={styles.input}
                 testID="email-input"
               />
-              {emailError && <Text style={styles.errorText}>{emailError}</Text>}
-            </View>
-
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Password</Text>
-              <View style={styles.passwordContainer}>
-                <TextInput
-                  style={[styles.passwordInput, passwordError && styles.inputError]}
-                  placeholder="Enter your password"
-                  placeholderTextColor="#999"
-                  value={password}
-                  onChangeText={(text) => {
-                    setPassword(text);
-                    if (passwordError) setPasswordError(null);
-                  }}
-                  secureTextEntry={!showPassword}
-                  autoCapitalize="none"
-                  testID="password-input"
-                />
-                <TouchableOpacity
-                  style={styles.eyeIcon}
-                  onPress={() => setShowPassword(!showPassword)}
-                  accessibilityRole="button"
-                  testID="toggle-password-visibility"
-                >
-                  <Ionicons
-                    name={showPassword ? 'eye-off' : 'eye'}
-                    size={20}
-                    color="#666"
-                  />
-                </TouchableOpacity>
-              </View>
-              {passwordError && <Text style={styles.errorText}>{passwordError}</Text>}
-            </View>
-
-            <TouchableOpacity
-              style={[styles.button, loading && styles.buttonDisabled]}
-              onPress={handleRegister}
-              disabled={loading}
-              testID="register-button"
-            >
-              {loading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.buttonText}>Register</Text>
+              {emailError && (
+                <Text variant="labelSmall" style={[styles.errorText, { color: theme.colors.error }]}>
+                  {emailError}
+                </Text>
               )}
-            </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.linkButton}
-              onPress={() => navigation.navigate('Login')}
-              testID="login-link"
-            >
-              <Text style={styles.linkText}>
-                Already have an account? <Text style={styles.linkTextBold}>Login</Text>
-              </Text>
-            </TouchableOpacity>
-          </View>
+              <TextInput
+                label="Password"
+                value={password}
+                onChangeText={(text) => {
+                  setPassword(text);
+                  if (passwordError) setPasswordError(null);
+                }}
+                mode="outlined"
+                secureTextEntry={!showPassword}
+                autoCapitalize="none"
+                error={!!passwordError}
+                left={<TextInput.Icon icon="lock" />}
+                right={
+                  <TextInput.Icon
+                    icon={showPassword ? 'eye-off' : 'eye'}
+                    onPress={() => setShowPassword(!showPassword)}
+                  />
+                }
+                style={styles.input}
+                testID="password-input"
+              />
+              {passwordError && (
+                <Text variant="labelSmall" style={[styles.errorText, { color: theme.colors.error }]}>
+                  {passwordError}
+                </Text>
+              )}
+
+              <Button
+                mode="contained"
+                onPress={handleRegister}
+                loading={loading}
+                disabled={loading}
+                style={styles.button}
+                contentStyle={styles.buttonContent}
+                testID="register-button"
+              >
+                Register
+              </Button>
+
+              <Button
+                mode="text"
+                onPress={() => navigation.navigate('Login')}
+                style={styles.linkButton}
+                testID="login-link"
+              >
+                Already have an account? <Text style={{ fontWeight: 'bold' }}>Login</Text>
+              </Button>
+            </View>
+          </Surface>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -183,7 +195,6 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
   },
   scrollContent: {
     flexGrow: 1,
@@ -193,93 +204,40 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 20,
   },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 8,
-    textAlign: 'center',
+  card: {
+    padding: 24,
+    borderRadius: 16,
   },
-  subtitle: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 40,
+  header: {
+    marginBottom: 32,
+    alignItems: 'center',
+  },
+  title: {
+    fontWeight: 'bold',
+    marginBottom: 8,
     textAlign: 'center',
   },
   form: {
     width: '100%',
   },
-  inputContainer: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
+  input: {
     marginBottom: 8,
   },
-  input: {
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    color: '#333',
-  },
-  passwordContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-  },
-  passwordInput: {
-    flex: 1,
-    padding: 12,
-    fontSize: 16,
-    color: '#333',
-  },
-  eyeIcon: {
-    padding: 12,
-  },
-  inputError: {
-    borderColor: '#ff4444',
-  },
   errorText: {
-    color: '#ff4444',
-    fontSize: 12,
-    marginTop: 4,
+    marginTop: -4,
+    marginBottom: 8,
+    marginLeft: 12,
   },
   button: {
-    backgroundColor: '#007AFF',
+    marginTop: 16,
     borderRadius: 8,
-    padding: 16,
-    alignItems: 'center',
-    marginTop: 10,
   },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+  buttonContent: {
+    paddingVertical: 8,
   },
   linkButton: {
-    marginTop: 20,
-    alignItems: 'center',
-  },
-  linkText: {
-    color: '#666',
-    fontSize: 14,
-  },
-  linkTextBold: {
-    color: '#007AFF',
-    fontWeight: '600',
+    marginTop: 16,
   },
 });
 
 export default RegisterScreen;
-

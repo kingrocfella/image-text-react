@@ -1,19 +1,23 @@
 import React, { useState } from "react";
 import {
   View,
-  Text,
-  Button,
   Alert,
-  ActivityIndicator,
   StyleSheet,
-  TouchableOpacity,
   ScrollView,
-  TextInput,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import * as DocumentPicker from "expo-document-picker";
 import * as Clipboard from "expo-clipboard";
-import { Ionicons } from "@expo/vector-icons";
+import {
+  Text,
+  Button,
+  Card,
+  Surface,
+  TextInput,
+  IconButton,
+  useTheme,
+  ActivityIndicator,
+} from "react-native-paper";
 import Toast from "react-native-toast-message";
 import { useAppDispatch, useAppSelector } from "../store";
 import {
@@ -23,6 +27,7 @@ import {
 
 const PdfScreen: React.FC = () => {
   const dispatch = useAppDispatch();
+  const theme = useTheme();
   const { accessToken, tokenType } = useAppSelector((state) => state.auth);
   const { extractedText, extracting } = useAppSelector((state) => state.pdf);
   const [pdfUri, setPdfUri] = useState<string | null>(null);
@@ -102,102 +107,136 @@ const PdfScreen: React.FC = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title} testID="pdf-screen-title">
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <Surface
+        style={[
+          styles.header,
+          { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.outline },
+        ]}
+        elevation={1}
+      >
+        <Text variant="headlineMedium" style={{ color: theme.colors.primary, fontWeight: 'bold' }} testID="pdf-screen-title">
           PDF to Text
         </Text>
-      </View>
+      </Surface>
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         {pdfUri ? (
           <View style={styles.previewContainer}>
-            <View style={styles.pdfInfoContainer}>
-              <Ionicons
-                name="document-text-outline"
-                size={48}
-                color="#007AFF"
-              />
-              <Text style={styles.pdfName} testID="pdf-name">
-                {pdfName}
-              </Text>
-            </View>
+            <Card style={[styles.pdfInfoCard, { backgroundColor: '#ffffff' }]} mode="outlined" contentStyle={styles.pdfInfoCardContent}>
+              <View style={styles.pdfInfoContent}>
+                <IconButton
+                  icon="file-document"
+                  iconColor={theme.colors.primary}
+                  size={64}
+                  style={styles.pdfIcon}
+                />
+                <Text variant="titleMedium" style={{ color: theme.colors.onSurface, textAlign: 'center' }} testID="pdf-name">
+                  {pdfName}
+                </Text>
+              </View>
+            </Card>
+
             {!extractedText && (
               <>
-                <View style={styles.questionContainer}>
-                  <Text style={styles.questionLabel}>
-                    Ask a question about the PDF uploaded:
-                  </Text>
-                  <TextInput
-                    style={styles.questionInput}
-                    placeholder="Enter your question..."
-                    placeholderTextColor="#999"
-                    value={query}
-                    onChangeText={setQuery}
-                    multiline
-                    numberOfLines={4}
-                    textAlignVertical="top"
-                    testID="question-input"
-                  />
-                </View>
-                <View style={styles.extractButtonContainer}>
-                  <Button
-                    title={
-                      extracting ? "Extracting..." : "Extract Text from PDF"
-                    }
-                    onPress={handleExtractText}
-                    disabled={extracting || !query.trim()}
-                    testID="extract-pdf-button"
-                  />
-                </View>
+                <TextInput
+                  label="Ask a question about the PDF uploaded"
+                  value={query}
+                  onChangeText={setQuery}
+                  mode="outlined"
+                  multiline
+                  numberOfLines={4}
+                  placeholder="Enter your question..."
+                  style={styles.questionInput}
+                  left={<TextInput.Icon icon="help-circle" />}
+                  testID="question-input"
+                />
+
+                <Button
+                  mode="contained"
+                  icon="text-recognition"
+                  onPress={handleExtractText}
+                  loading={extracting}
+                  disabled={extracting || !query.trim()}
+                  style={styles.extractButton}
+                  contentStyle={styles.buttonContent}
+                  testID="extract-pdf-button"
+                >
+                  {extracting ? "Extracting..." : "Extract Text from PDF"}
+                </Button>
               </>
             )}
+
             {extracting && (
               <View style={styles.loader}>
-                <ActivityIndicator
-                  size="large"
-                  color="#007AFF"
-                  testID="extract-loader"
-                />
+                <ActivityIndicator size="large" color={theme.colors.primary} testID="extract-loader" />
               </View>
             )}
+
             {extractedText && (
               <>
-                <View style={styles.textContainer}>
+                <Card style={[styles.textCard, { backgroundColor: '#ffffff' }]} mode="outlined" contentStyle={styles.textCardContent}>
                   <View style={styles.textHeader}>
-                    <Text style={styles.textLabel}>Extracted Text:</Text>
-                    <TouchableOpacity
-                      style={styles.copyButton}
+                    <Text variant="titleMedium" style={{ color: theme.colors.primary, fontWeight: '600' }}>
+                      Extracted Text:
+                    </Text>
+                    <IconButton
+                      icon="content-copy"
+                      iconColor={theme.colors.primary}
+                      size={24}
                       onPress={handleCopyText}
-                      accessibilityRole="button"
                       testID="copy-button"
-                    >
-                      <Ionicons name="copy-outline" size={20} color="#007AFF" />
-                    </TouchableOpacity>
+                    />
                   </View>
-                  <Text style={styles.extractedText} testID="extracted-text">
+                  <Text variant="bodyMedium" style={{ color: theme.colors.onSurface }} testID="extracted-text">
                     {extractedText}
                   </Text>
-                </View>
-                <View style={styles.extractAnotherContainer}>
-                  <Button
-                    title="Extract Another"
-                    onPress={handleExtractAnother}
-                    color="#007AFF"
-                    testID="extract-another-button"
-                  />
-                </View>
+                </Card>
+
+                <Button
+                  mode="outlined"
+                  icon="refresh"
+                  onPress={handleExtractAnother}
+                  style={styles.extractAnotherButton}
+                  contentStyle={styles.buttonContent}
+                  testID="extract-another-button"
+                >
+                  Extract Another
+                </Button>
               </>
             )}
           </View>
         ) : (
           <View style={styles.centerContainer}>
-            <Button
-              title="Upload PDF File"
-              onPress={handlePickDocument}
-              color="#007AFF"
-              testID="upload-pdf-button"
-            />
+            <Card style={[styles.welcomeCard, { backgroundColor: '#ffffff' }]} mode="outlined" contentStyle={styles.welcomeCardContent}>
+              <View style={styles.welcomeContent}>
+                <IconButton
+                  icon="file-document-outline"
+                  iconColor={theme.colors.primary}
+                  size={64}
+                  style={styles.welcomeIcon}
+                />
+                <Text variant="headlineSmall" style={{ color: theme.colors.primary, marginBottom: 8, textAlign: 'center' }}>
+                  Upload PDF
+                </Text>
+                <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant, textAlign: 'center', marginBottom: 24 }}>
+                  Select a PDF file to extract text and ask questions
+                </Text>
+                <Button
+                  mode="contained"
+                  icon="upload"
+                  onPress={handlePickDocument}
+                  style={styles.uploadButton}
+                  contentStyle={styles.buttonContent}
+                  testID="upload-pdf-button"
+                >
+                  Upload PDF File
+                </Button>
+              </View>
+            </Card>
           </View>
         )}
       </ScrollView>
@@ -210,17 +249,11 @@ const PdfScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
   },
   header: {
     padding: 20,
     paddingTop: 60,
     borderBottomWidth: 1,
-    borderBottomColor: "#e0e0e0",
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
   },
   scrollContent: {
     flexGrow: 1,
@@ -231,78 +264,69 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  welcomeCard: {
+    width: "100%",
+    borderRadius: 16,
+  },
+  welcomeCardContent: {
+    padding: 24,
+  },
+  welcomeContent: {
+    alignItems: "center",
+  },
+  welcomeIcon: {
+    marginBottom: 16,
+  },
   previewContainer: {
     width: "100%",
   },
-  pdfInfoContainer: {
+  pdfInfoCard: {
+    marginBottom: 20,
+    borderRadius: 12,
+  },
+  pdfInfoCardContent: {
+    padding: 24,
+  },
+  pdfInfoContent: {
     alignItems: "center",
-    marginBottom: 20,
-    padding: 20,
-    backgroundColor: "#f5f5f5",
-    borderRadius: 10,
   },
-  pdfName: {
-    fontSize: 16,
-    marginTop: 10,
-    color: "#333",
-    textAlign: "center",
+  pdfIcon: {
+    marginBottom: 8,
   },
-  extractButtonContainer: {
+  questionInput: {
     marginBottom: 20,
+  },
+  extractButton: {
+    marginBottom: 20,
+    borderRadius: 12,
+  },
+  buttonContent: {
+    paddingVertical: 8,
   },
   loader: {
     marginTop: 10,
     alignItems: "center",
     marginBottom: 20,
   },
-  textContainer: {
-    backgroundColor: "#f5f5f5",
-    borderRadius: 8,
-    padding: 16,
+  textCard: {
     marginTop: 10,
+    borderRadius: 12,
+  },
+  textCardContent: {
+    padding: 16,
   },
   textHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: 12,
   },
-  textLabel: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#333",
-    flex: 1,
-  },
-  copyButton: {
-    padding: 4,
-    marginLeft: 8,
-  },
-  extractedText: {
-    fontSize: 14,
-    color: "#666",
-    lineHeight: 20,
-  },
-  extractAnotherContainer: {
+  extractAnotherButton: {
     marginTop: 20,
+    borderRadius: 12,
   },
-  questionContainer: {
-    marginBottom: 20,
-  },
-  questionLabel: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#333",
-    marginBottom: 8,
-  },
-  questionInput: {
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    backgroundColor: "#fff",
-    minHeight: 100,
-    color: "#333",
+  uploadButton: {
+    borderRadius: 12,
   },
 });
 

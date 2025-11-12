@@ -1,18 +1,22 @@
 import React, { useState } from 'react';
 import {
   View,
-  Text,
-  Button,
   Image,
   Alert,
-  ActivityIndicator,
   StyleSheet,
-  TouchableOpacity,
   ScrollView,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import * as Clipboard from 'expo-clipboard';
-import { Ionicons } from '@expo/vector-icons';
+import {
+  Text,
+  Button,
+  Card,
+  Surface,
+  IconButton,
+  useTheme,
+  ActivityIndicator,
+} from 'react-native-paper';
 import Toast from 'react-native-toast-message';
 import { useAppDispatch, useAppSelector } from '../store';
 import { logout } from '../store/actions/authActions';
@@ -21,6 +25,7 @@ import ImagePickerComponent from '../components/ImagePickerComponent';
 
 const HomeScreen: React.FC = () => {
   const dispatch = useAppDispatch();
+  const theme = useTheme();
   const { user, accessToken, tokenType } = useAppSelector((state) => state.auth);
   const { extractedText, extracting } = useAppSelector((state) => state.image);
   const [image, setImage] = useState<string | null>(null);
@@ -49,7 +54,7 @@ const HomeScreen: React.FC = () => {
 
   const handleCopyText = async () => {
     if (!extractedText) return;
-    
+
     try {
       await Clipboard.setStringAsync(extractedText);
       Toast.show({
@@ -74,77 +79,119 @@ const HomeScreen: React.FC = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <Surface
+        style={[
+          styles.header,
+          { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.outline },
+        ]}
+        elevation={1}
+      >
         <View style={styles.headerContent}>
           <View style={styles.headerLeft}>
-            <Text style={styles.title} testID="app-title">Image to Text App</Text>
+            <Text variant="headlineMedium" style={{ color: theme.colors.primary, fontWeight: 'bold' }} testID="app-title">
+              Image to Text
+            </Text>
             {user && (
-              <Text style={styles.userName} testID="welcome-text">
+              <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }} testID="welcome-text">
                 Welcome, {user.name}!
               </Text>
             )}
           </View>
-          <TouchableOpacity
-            style={styles.logoutButton}
+          <IconButton
+            icon="logout"
+            iconColor={theme.colors.error}
+            size={24}
             onPress={handleLogout}
-            accessibilityRole="button"
             testID="logout-button"
-          >
-            <Text style={styles.logoutText}>Logout</Text>
-          </TouchableOpacity>
+            style={styles.logoutButton}
+          />
         </View>
-      </View>
+      </Surface>
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         {image ? (
           <View style={styles.previewContainer}>
-            <Image source={{ uri: image }} style={styles.image} testID="image-preview" />
+            <Card style={[styles.imageCard, { backgroundColor: '#ffffff' }]} mode="outlined" contentStyle={styles.imageCardContent}>
+              <Image source={{ uri: image }} style={styles.image} testID="image-preview" />
+            </Card>
+
             {!extractedText && (
-              <View style={styles.extractButtonContainer}>
-                <Button
-                  title={extracting ? "Extracting..." : "Extract Text from Picture"}
-                  onPress={handleExtractText}
-                  disabled={extracting}
-                />
-              </View>
+              <Button
+                mode="contained"
+                icon="text-recognition"
+                onPress={handleExtractText}
+                loading={extracting}
+                disabled={extracting}
+                style={styles.extractButton}
+                contentStyle={styles.buttonContent}
+                testID="extract-button"
+              >
+                {extracting ? 'Extracting...' : 'Extract Text from Picture'}
+              </Button>
             )}
+
             {extracting && (
               <View style={styles.loader}>
-                <ActivityIndicator size="large" color="#007AFF" testID="extract-loader" />
+                <ActivityIndicator size="large" color={theme.colors.primary} testID="extract-loader" />
               </View>
             )}
+
             {extractedText && (
               <>
-                <View style={styles.textContainer}>
+                <Card style={[styles.textCard, { backgroundColor: '#ffffff' }]} mode="outlined" contentStyle={styles.textCardContent}>
                   <View style={styles.textHeader}>
-                    <Text style={styles.textLabel}>Extracted Text:</Text>
-                    <TouchableOpacity
-                      style={styles.copyButton}
+                    <Text variant="titleMedium" style={{ color: theme.colors.primary, fontWeight: '600' }}>
+                      Extracted Text:
+                    </Text>
+                    <IconButton
+                      icon="content-copy"
+                      iconColor={theme.colors.primary}
+                      size={24}
                       onPress={handleCopyText}
-                      accessibilityRole="button"
                       testID="copy-button"
-                    >
-                      <Ionicons name="copy-outline" size={20} color="#007AFF" />
-                    </TouchableOpacity>
+                    />
                   </View>
-                  <Text style={styles.extractedText} testID="extracted-text">
+                  <Text variant="bodyMedium" style={{ color: theme.colors.onSurface }} testID="extracted-text">
                     {extractedText}
                   </Text>
-                </View>
-                <View style={styles.extractAnotherContainer}>
-                  <Button
-                    title="Extract Another"
-                    onPress={handleExtractAnother}
-                    color="#007AFF"
-                  />
-                </View>
+                </Card>
+
+                <Button
+                  mode="outlined"
+                  icon="refresh"
+                  onPress={handleExtractAnother}
+                  style={styles.extractAnotherButton}
+                  contentStyle={styles.buttonContent}
+                  testID="extract-another-button"
+                >
+                  Extract Another
+                </Button>
               </>
             )}
           </View>
         ) : (
           <View style={styles.centerContainer}>
-            <ImagePickerComponent onImageSelected={handleImageSelected} />
+            <Card style={[styles.welcomeCard, { backgroundColor: '#ffffff' }]} mode="outlined" contentStyle={styles.welcomeCardContent}>
+              <View style={styles.welcomeContent}>
+                <IconButton
+                  icon="camera-outline"
+                  iconColor={theme.colors.primary}
+                  size={64}
+                  style={styles.welcomeIcon}
+                />
+                <Text variant="headlineSmall" style={{ color: theme.colors.primary, marginBottom: 8, textAlign: 'center' }}>
+                  Get Started
+                </Text>
+                <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant, textAlign: 'center', marginBottom: 24 }}>
+                  Take a picture or select from gallery to extract text
+                </Text>
+                <ImagePickerComponent onImageSelected={handleImageSelected} />
+              </View>
+            </Card>
           </View>
         )}
       </ScrollView>
@@ -157,13 +204,11 @@ const HomeScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
   },
   header: {
-    padding: 20,
+    padding: 16,
     paddingTop: 60,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
   },
   headerContent: {
     flexDirection: 'row',
@@ -173,25 +218,8 @@ const styles = StyleSheet.create({
   headerLeft: {
     flex: 1,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  userName: {
-    fontSize: 14,
-    color: '#666',
-  },
   logoutButton: {
-    padding: 8,
-    paddingHorizontal: 16,
-    backgroundColor: '#ff4444',
-    borderRadius: 8,
-  },
-  logoutText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 14,
+    margin: 0,
   },
   scrollContent: {
     flexGrow: 1,
@@ -202,55 +230,64 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  welcomeCard: {
+    width: '100%',
+    borderRadius: 16,
+  },
+  welcomeCardContent: {
+    padding: 24,
+  },
+  welcomeContent: {
+    alignItems: 'center',
+  },
+  welcomeIcon: {
+    marginBottom: 16,
+  },
   previewContainer: {
     width: '100%',
+  },
+  imageCard: {
+    marginBottom: 20,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  imageCardContent: {
+    padding: 0,
   },
   image: {
     width: '100%',
     height: 300,
-    borderRadius: 10,
-    marginBottom: 20,
     resizeMode: 'cover',
   },
-  extractButtonContainer: {
+  extractButton: {
     marginBottom: 20,
+    borderRadius: 12,
+  },
+  buttonContent: {
+    paddingVertical: 8,
   },
   loader: {
     marginTop: 10,
     alignItems: 'center',
     marginBottom: 20,
   },
-  textContainer: {
-    backgroundColor: '#f5f5f5',
-    borderRadius: 8,
-    padding: 16,
+  textCard: {
     marginTop: 10,
+    borderRadius: 12,
+  },
+  textCardContent: {
+    padding: 16,
   },
   textHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 12,
   },
-  textLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    flex: 1,
-  },
-  copyButton: {
-    padding: 4,
-    marginLeft: 8,
-  },
-  extractedText: {
-    fontSize: 14,
-    color: '#666',
-    lineHeight: 20,
-  },
-  extractAnotherContainer: {
+  extractAnotherButton: {
     marginTop: 20,
+    borderRadius: 12,
   },
 });
 
 export default HomeScreen;
-
