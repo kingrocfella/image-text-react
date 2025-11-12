@@ -115,7 +115,7 @@ const renderHomeScreen = () => render(<HomeScreen />);
 describe('HomeScreen', () => {
   it('renders the app title', () => {
     const { getByTestId } = renderHomeScreen();
-    expect(getByTestId('app-title').props.children).toBe('Image to Text App');
+    expect(getByTestId('app-title').props.children).toBe('Image to Text');
   });
 
   it('displays welcome message when user exists', () => {

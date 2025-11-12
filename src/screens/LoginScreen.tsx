@@ -1,16 +1,20 @@
 import React, { useState } from 'react';
 import {
   View,
-  Text,
-  TextInput,
-  TouchableOpacity,
   StyleSheet,
   Alert,
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import {
+  Text,
+  TextInput,
+  Button,
+  Card,
+  Surface,
+  useTheme,
+} from 'react-native-paper';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAppDispatch, useAppSelector } from '../store';
 import { login } from '../store/actions/authActions';
@@ -31,6 +35,7 @@ interface Props {
 const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const dispatch = useAppDispatch();
   const { loading } = useAppSelector((state) => state.auth);
+  const theme = useTheme();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -63,88 +68,97 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
-      <View style={styles.content}>
-        <Text style={styles.title}>Login</Text>
-        <Text style={styles.subtitle}>Welcome back!</Text>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.content}>
+          <Surface style={[styles.card, { backgroundColor: theme.colors.surface }]} elevation={2}>
+            <View style={styles.header}>
+              <Text variant="displaySmall" style={[styles.title, { color: theme.colors.primary }]}>
+                Welcome Back
+              </Text>
+              <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant }}>
+                Sign in to continue
+              </Text>
+            </View>
 
-        <View style={styles.form}>
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Email</Text>
-            <TextInput
-              style={[styles.input, emailError && styles.inputError]}
-              placeholder="Enter your email"
-              placeholderTextColor="#999"
-              value={email}
-              onChangeText={(text) => {
-                setEmail(text);
-                if (emailError) setEmailError(null);
-              }}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-              testID="email-input"
-            />
-            {emailError && <Text style={styles.errorText}>{emailError}</Text>}
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Password</Text>
-            <View style={styles.passwordContainer}>
+            <View style={styles.form}>
               <TextInput
-                style={[styles.passwordInput, passwordError && styles.inputError]}
-                placeholder="Enter your password"
-                placeholderTextColor="#999"
+                label="Email"
+                value={email}
+                onChangeText={(text) => {
+                  setEmail(text);
+                  if (emailError) setEmailError(null);
+                }}
+                mode="outlined"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                error={!!emailError}
+                left={<TextInput.Icon icon="email" />}
+                style={styles.input}
+                testID="email-input"
+              />
+              {emailError && (
+                <Text variant="labelSmall" style={[styles.errorText, { color: theme.colors.error }]}>
+                  {emailError}
+                </Text>
+              )}
+
+              <TextInput
+                label="Password"
                 value={password}
                 onChangeText={(text) => {
                   setPassword(text);
                   if (passwordError) setPasswordError(null);
                 }}
+                mode="outlined"
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
+                error={!!passwordError}
+                left={<TextInput.Icon icon="lock" />}
+                right={
+                  <TextInput.Icon
+                    icon={showPassword ? 'eye-off' : 'eye'}
+                    onPress={() => setShowPassword(!showPassword)}
+                  />
+                }
+                style={styles.input}
                 testID="password-input"
               />
-              <TouchableOpacity
-                style={styles.eyeIcon}
-                onPress={() => setShowPassword(!showPassword)}
-                accessibilityRole="button"
-                testID="toggle-password-visibility"
+              {passwordError && (
+                <Text variant="labelSmall" style={[styles.errorText, { color: theme.colors.error }]}>
+                  {passwordError}
+                </Text>
+              )}
+
+              <Button
+                mode="contained"
+                onPress={handleLogin}
+                loading={loading}
+                disabled={loading}
+                style={styles.button}
+                contentStyle={styles.buttonContent}
+                testID="login-button"
               >
-                <Ionicons
-                  name={showPassword ? 'eye-off' : 'eye'}
-                  size={20}
-                  color="#666"
-                />
-              </TouchableOpacity>
+                Login
+              </Button>
+
+              <Button
+                mode="text"
+                onPress={() => navigation.navigate('Register')}
+                style={styles.linkButton}
+                testID="register-link"
+              >
+                Don't have an account? <Text style={{ fontWeight: 'bold' }}>Register</Text>
+              </Button>
             </View>
-            {passwordError && <Text style={styles.errorText}>{passwordError}</Text>}
-          </View>
-
-          <TouchableOpacity
-            style={[styles.button, loading && styles.buttonDisabled]}
-            onPress={handleLogin}
-            disabled={loading}
-            testID="login-button"
-          >
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.buttonText}>Login</Text>
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.linkButton}
-            onPress={() => navigation.navigate('Register')}
-            testID="register-link"
-          >
-            <Text style={styles.linkText}>
-              Don't have an account? <Text style={styles.linkTextBold}>Register</Text>
-            </Text>
-          </TouchableOpacity>
+          </Surface>
         </View>
-      </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 };
@@ -152,100 +166,49 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+  },
+  scrollContent: {
+    flexGrow: 1,
   },
   content: {
     flex: 1,
     justifyContent: 'center',
     padding: 20,
   },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 8,
-    textAlign: 'center',
+  card: {
+    padding: 24,
+    borderRadius: 16,
   },
-  subtitle: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 40,
+  header: {
+    marginBottom: 32,
+    alignItems: 'center',
+  },
+  title: {
+    fontWeight: 'bold',
+    marginBottom: 8,
     textAlign: 'center',
   },
   form: {
     width: '100%',
   },
-  inputContainer: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
+  input: {
     marginBottom: 8,
   },
-  input: {
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    color: '#333',
-  },
-  passwordContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-  },
-  passwordInput: {
-    flex: 1,
-    padding: 12,
-    fontSize: 16,
-    color: '#333',
-  },
-  eyeIcon: {
-    padding: 12,
-  },
-  inputError: {
-    borderColor: '#ff4444',
-  },
   errorText: {
-    color: '#ff4444',
-    fontSize: 12,
-    marginTop: 4,
+    marginTop: -4,
+    marginBottom: 8,
+    marginLeft: 12,
   },
   button: {
-    backgroundColor: '#007AFF',
+    marginTop: 16,
     borderRadius: 8,
-    padding: 16,
-    alignItems: 'center',
-    marginTop: 10,
   },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+  buttonContent: {
+    paddingVertical: 8,
   },
   linkButton: {
-    marginTop: 20,
-    alignItems: 'center',
-  },
-  linkText: {
-    color: '#666',
-    fontSize: 14,
-  },
-  linkTextBold: {
-    color: '#007AFF',
-    fontWeight: '600',
+    marginTop: 16,
   },
 });
 
 export default LoginScreen;
-

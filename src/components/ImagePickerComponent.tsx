@@ -1,16 +1,22 @@
-import React from 'react';
-import { View, Button, Alert, StyleSheet } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
+import React from "react";
+import { View, Alert, StyleSheet } from "react-native";
+import { Button } from "react-native-paper";
+import * as ImagePicker from "expo-image-picker";
 
 interface ImagePickerComponentProps {
   onImageSelected: (uri: string) => void;
 }
 
-const ImagePickerComponent: React.FC<ImagePickerComponentProps> = ({ onImageSelected }) => {
+const ImagePickerComponent: React.FC<ImagePickerComponentProps> = ({
+  onImageSelected,
+}) => {
   const requestCameraPermission = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permission Denied', 'Camera permission is required to take pictures.');
+    if (status !== "granted") {
+      Alert.alert(
+        "Permission Denied",
+        "Camera permission is required to take pictures."
+      );
       return false;
     }
     return true;
@@ -21,7 +27,7 @@ const ImagePickerComponent: React.FC<ImagePickerComponentProps> = ({ onImageSele
     if (!hasPermission) return;
 
     const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: 'images',
+      mediaTypes: "images",
       allowsEditing: true,
       aspect: [4, 3],
       quality: 1,
@@ -34,7 +40,7 @@ const ImagePickerComponent: React.FC<ImagePickerComponentProps> = ({ onImageSele
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: 'images',
+      mediaTypes: "images",
       allowsEditing: true,
       aspect: [4, 3],
       quality: 1,
@@ -47,27 +53,43 @@ const ImagePickerComponent: React.FC<ImagePickerComponentProps> = ({ onImageSele
 
   return (
     <View style={styles.container}>
-      <View style={styles.button}>
-        <Button title="Take Picture" onPress={takePicture} />
-      </View>
-      <View style={styles.button}>
-        <Button title="Pick from Gallery" onPress={pickImage} />
-      </View>
+      <Button
+        mode="contained"
+        icon="camera"
+        onPress={takePicture}
+        style={styles.button}
+        contentStyle={styles.buttonContent}
+        testID="take-picture-button"
+      >
+        Take Picture
+      </Button>
+      <Button
+        mode="contained-tonal"
+        icon="image"
+        onPress={pickImage}
+        style={styles.button}
+        contentStyle={styles.buttonContent}
+        testID="pick-image-button"
+      >
+        Pick from Gallery
+      </Button>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    width: '100%',
-    alignItems: 'center',
-    gap: 15,
+    width: "100%",
+    alignItems: "center",
+    gap: 16,
   },
   button: {
-    width: 250,
-    marginVertical: 5,
+    width: 280,
+    borderRadius: 12,
+  },
+  buttonContent: {
+    paddingVertical: 8,
   },
 });
 
 export default ImagePickerComponent;
-
