@@ -58,6 +58,44 @@ jest.mock('react-native-paper', () => {
       </TouchableOpacity>
     ),
     ActivityIndicator: ({ testID, ...props }: any) => <View testID={testID || "activity-indicator"} {...props} />,
+    Menu: Object.assign(
+      ({ visible, onDismiss, anchor, children, ...props }: any) => {
+        // Store menu items in a way that's accessible for testing
+        const menuItems = React.Children.toArray(children);
+        const AnchorComponent = React.cloneElement(anchor, {
+          onPress: anchor.props.onPress,
+        });
+        return (
+          <View testID="menu-container">
+            {AnchorComponent}
+            {visible && (
+              <View testID="menu-items-container">
+                {menuItems.map((child: any, index: number) =>
+                  React.cloneElement(child, {
+                    key: index,
+                    onPress: () => {
+                      if (child.props.onPress) {
+                        child.props.onPress();
+                      }
+                      if (onDismiss) {
+                        onDismiss();
+                      }
+                    },
+                  })
+                )}
+              </View>
+            )}
+          </View>
+        );
+      },
+      {
+        Item: ({ onPress, title, testID, ...props }: any) => (
+          <TouchableOpacity onPress={onPress} testID={testID} {...props}>
+            <Text>{title}</Text>
+          </TouchableOpacity>
+        ),
+      }
+    ),
     useTheme: () => ({
       colors: {
         primary: '#374151',
@@ -196,6 +234,19 @@ describe('PdfScreen', () => {
       fireEvent.press(getByTestId('upload-pdf-button'));
     });
 
+    // Select a model - the Menu mock renders items when visible
+    // We need to trigger the menu to open first, then select an option
+    const modelDropdown = getByTestId('model-dropdown');
+    await act(async () => {
+      fireEvent.press(modelDropdown);
+    });
+    
+    // Wait for menu items to appear and select openai
+    await act(async () => {
+      const openaiOption = getByTestId('model-option-openai');
+      fireEvent.press(openaiOption);
+    });
+
     const questionInput = getByTestId('question-input');
     fireEvent.changeText(questionInput, 'What is this document about?');
 
@@ -207,6 +258,7 @@ describe('PdfScreen', () => {
       'mock-pdf-uri',
       'test.pdf',
       'What is this document about?',
+      'openai',
       'mock-access-token',
       'Bearer'
     );

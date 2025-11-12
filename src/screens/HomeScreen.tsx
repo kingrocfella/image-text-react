@@ -179,14 +179,14 @@ const HomeScreen: React.FC = () => {
               <View style={styles.welcomeContent}>
                 <IconButton
                   icon="camera-outline"
-                  iconColor={theme.colors.primary}
+                  iconColor={theme.colors.secondary}
                   size={64}
                   style={styles.welcomeIcon}
                 />
-                <Text variant="headlineSmall" style={{ color: theme.colors.primary, marginBottom: 8, textAlign: 'center' }}>
+                <Text variant="headlineSmall" style={{ color: theme.colors.secondary, marginBottom: 8, textAlign: 'center' }}>
                   Get Started
                 </Text>
-                <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant, textAlign: 'center', marginBottom: 24 }}>
+                <Text variant="bodyMedium" style={{ color: theme.colors.tertiary, textAlign: 'center', marginBottom: 24 }}>
                   Take a picture or select from gallery to extract text
                 </Text>
                 <ImagePickerComponent onImageSelected={handleImageSelected} />
