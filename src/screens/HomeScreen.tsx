@@ -1,13 +1,7 @@
-import React, { useState } from 'react';
-import {
-  View,
-  Image,
-  Alert,
-  StyleSheet,
-  ScrollView,
-} from 'react-native';
-import { StatusBar } from 'expo-status-bar';
-import * as Clipboard from 'expo-clipboard';
+import React, { useState } from "react";
+import { View, Image, Alert, StyleSheet, ScrollView } from "react-native";
+import { StatusBar } from "expo-status-bar";
+import * as Clipboard from "expo-clipboard";
 import {
   Text,
   Button,
@@ -16,17 +10,20 @@ import {
   IconButton,
   useTheme,
   ActivityIndicator,
-} from 'react-native-paper';
-import Toast from 'react-native-toast-message';
-import { useAppDispatch, useAppSelector } from '../store';
-import { logout } from '../store/actions/authActions';
-import { extractText, clearExtractedText } from '../store/actions/imageActions';
-import ImagePickerComponent from '../components/ImagePickerComponent';
+} from "react-native-paper";
+import Toast from "react-native-toast-message";
+import { useAppDispatch, useAppSelector } from "../store";
+import { logout } from "../store/actions/authActions";
+import { extractText, clearExtractedText } from "../store/actions/imageActions";
+import ImagePickerComponent from "../components/ImagePickerComponent";
+import ThemeToggle from "../components/ThemeToggle";
 
 const HomeScreen: React.FC = () => {
   const dispatch = useAppDispatch();
   const theme = useTheme();
-  const { user, accessToken, tokenType } = useAppSelector((state) => state.auth);
+  const { user, accessToken, tokenType } = useAppSelector(
+    (state) => state.auth
+  );
   const { extractedText, extracting } = useAppSelector((state) => state.image);
   const [image, setImage] = useState<string | null>(null);
 
@@ -37,14 +34,17 @@ const HomeScreen: React.FC = () => {
 
   const handleExtractText = async () => {
     if (!image) {
-      Alert.alert('No Image', 'Please take or select an image first.');
+      Alert.alert("No Image", "Please take or select an image first.");
       return;
     }
 
     try {
       await dispatch(extractText(image, accessToken, tokenType));
     } catch (error) {
-      Alert.alert('Extraction Failed', error instanceof Error ? error.message : 'An error occurred');
+      Alert.alert(
+        "Extraction Failed",
+        error instanceof Error ? error.message : "An error occurred"
+      );
     }
   };
 
@@ -58,16 +58,16 @@ const HomeScreen: React.FC = () => {
     try {
       await Clipboard.setStringAsync(extractedText);
       Toast.show({
-        type: 'success',
-        text1: 'Text copied to clipboard',
-        position: 'bottom',
+        type: "success",
+        text1: "Text copied to clipboard",
+        position: "bottom",
         visibilityTime: 2000,
       });
     } catch (error) {
       Toast.show({
-        type: 'error',
-        text1: 'Failed to copy text',
-        position: 'bottom',
+        type: "error",
+        text1: "Failed to copy text",
+        position: "bottom",
         visibilityTime: 2000,
       });
     }
@@ -79,33 +79,49 @@ const HomeScreen: React.FC = () => {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <View
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
       <Surface
         style={[
           styles.header,
-          { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.outline },
+          {
+            backgroundColor: theme.colors.surface,
+            borderBottomColor: theme.colors.outline,
+          },
         ]}
         elevation={1}
       >
         <View style={styles.headerContent}>
           <View style={styles.headerLeft}>
-            <Text variant="headlineMedium" style={{ color: theme.colors.primary, fontWeight: 'bold' }} testID="app-title">
+            <Text
+              variant="headlineMedium"
+              style={{ color: theme.colors.primary, fontWeight: "bold" }}
+              testID="app-title"
+            >
               Image to Text
             </Text>
             {user && (
-              <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }} testID="welcome-text">
+              <Text
+                variant="bodyMedium"
+                style={{ color: theme.colors.onSurfaceVariant }}
+                testID="welcome-text"
+              >
                 Welcome, {user.name}!
               </Text>
             )}
           </View>
-          <IconButton
-            icon="logout"
-            iconColor={theme.colors.error}
-            size={24}
-            onPress={handleLogout}
-            testID="logout-button"
-            style={styles.logoutButton}
-          />
+          <View style={styles.headerRight}>
+            <ThemeToggle />
+            <IconButton
+              icon="logout"
+              iconColor={theme.colors.error}
+              size={24}
+              onPress={handleLogout}
+              testID="logout-button"
+              style={styles.logoutButton}
+            />
+          </View>
         </View>
       </Surface>
 
@@ -115,8 +131,16 @@ const HomeScreen: React.FC = () => {
       >
         {image ? (
           <View style={styles.previewContainer}>
-            <Card style={[styles.imageCard, { backgroundColor: '#ffffff' }]} mode="outlined" contentStyle={styles.imageCardContent}>
-              <Image source={{ uri: image }} style={styles.image} testID="image-preview" />
+            <Card
+              style={[styles.imageCard, { backgroundColor: "#ffffff" }]}
+              mode="outlined"
+              contentStyle={styles.imageCardContent}
+            >
+              <Image
+                source={{ uri: image }}
+                style={styles.image}
+                testID="image-preview"
+              />
             </Card>
 
             {!extractedText && (
@@ -130,32 +154,47 @@ const HomeScreen: React.FC = () => {
                 contentStyle={styles.buttonContent}
                 testID="extract-button"
               >
-                {extracting ? 'Extracting...' : 'Extract Text from Picture'}
+                {extracting ? "Extracting..." : "Extract Text from Picture"}
               </Button>
             )}
 
             {extracting && (
               <View style={styles.loader}>
-                <ActivityIndicator size="large" color={theme.colors.primary} testID="extract-loader" />
+                <ActivityIndicator
+                  size="large"
+                  color={theme.colors.primary}
+                  testID="extract-loader"
+                />
               </View>
             )}
 
             {extractedText && (
               <>
-                <Card style={[styles.textCard, { backgroundColor: '#ffffff' }]} mode="outlined" contentStyle={styles.textCardContent}>
+                <Card
+                  style={[styles.textCard, { backgroundColor: "#ffffff" }]}
+                  mode="outlined"
+                  contentStyle={styles.textCardContent}
+                >
                   <View style={styles.textHeader}>
-                    <Text variant="titleMedium" style={{ color: theme.colors.primary, fontWeight: '600' }}>
+                    <Text
+                      variant="titleMedium"
+                      style={{ color: theme.colors.tertiary, fontWeight: "600" }}
+                    >
                       Extracted Text:
                     </Text>
                     <IconButton
                       icon="content-copy"
-                      iconColor={theme.colors.primary}
+                      iconColor={theme.colors.tertiary}
                       size={24}
                       onPress={handleCopyText}
                       testID="copy-button"
                     />
                   </View>
-                  <Text variant="bodyMedium" style={{ color: theme.colors.onSurface }} testID="extracted-text">
+                  <Text
+                    variant="bodyMedium"
+                    style={{ color: theme.colors.tertiary }}
+                    testID="extracted-text"
+                  >
                     {extractedText}
                   </Text>
                 </Card>
@@ -175,18 +214,36 @@ const HomeScreen: React.FC = () => {
           </View>
         ) : (
           <View style={styles.centerContainer}>
-            <Card style={[styles.welcomeCard, { backgroundColor: '#ffffff' }]} mode="outlined" contentStyle={styles.welcomeCardContent}>
+            <Card
+              style={[styles.welcomeCard, { backgroundColor: "#ffffff" }]}
+              mode="outlined"
+              contentStyle={styles.welcomeCardContent}
+            >
               <View style={styles.welcomeContent}>
                 <IconButton
                   icon="camera-outline"
-                  iconColor={theme.colors.secondary}
+                  iconColor={theme.colors.tertiary}
                   size={64}
                   style={styles.welcomeIcon}
                 />
-                <Text variant="headlineSmall" style={{ color: theme.colors.secondary, marginBottom: 8, textAlign: 'center' }}>
+                <Text
+                  variant="headlineSmall"
+                  style={{
+                    color: theme.colors.tertiary,
+                    marginBottom: 8,
+                    textAlign: "center",
+                  }}
+                >
                   Get Started
                 </Text>
-                <Text variant="bodyMedium" style={{ color: theme.colors.tertiary, textAlign: 'center', marginBottom: 24 }}>
+                <Text
+                  variant="bodyMedium"
+                  style={{
+                    color: theme.colors.tertiary,
+                    textAlign: "center",
+                    marginBottom: 24,
+                  }}
+                >
                   Take a picture or select from gallery to extract text
                 </Text>
                 <ImagePickerComponent onImageSelected={handleImageSelected} />
@@ -211,12 +268,17 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   headerContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   headerLeft: {
     flex: 1,
+  },
+  headerRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
   logoutButton: {
     margin: 0,
@@ -227,37 +289,37 @@ const styles = StyleSheet.create({
   },
   centerContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   welcomeCard: {
-    width: '100%',
+    width: "100%",
     borderRadius: 16,
   },
   welcomeCardContent: {
     padding: 24,
   },
   welcomeContent: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   welcomeIcon: {
     marginBottom: 16,
   },
   previewContainer: {
-    width: '100%',
+    width: "100%",
   },
   imageCard: {
     marginBottom: 20,
     borderRadius: 12,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   imageCardContent: {
     padding: 0,
   },
   image: {
-    width: '100%',
+    width: "100%",
     height: 300,
-    resizeMode: 'cover',
+    resizeMode: "cover",
   },
   extractButton: {
     marginBottom: 20,
@@ -268,7 +330,7 @@ const styles = StyleSheet.create({
   },
   loader: {
     marginTop: 10,
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 20,
   },
   textCard: {
@@ -279,9 +341,9 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   textHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 12,
   },
   extractAnotherButton: {
