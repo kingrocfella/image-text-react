@@ -1,19 +1,25 @@
 # Image to Text Mobile App
 
-A React Native app built with Expo that allows users to extract text from images using OCR technology. The app includes user authentication, camera functionality, and seamless text extraction with copy-to-clipboard features.
+A React Native app built with Expo that allows users to extract text from images and PDFs using AI-powered OCR technology. The app includes user authentication, camera functionality, PDF document processing, and seamless text extraction with copy-to-clipboard features.
 
 ## Features
 
 - 🔐 **Authentication**: Login and Register screens with form validation
 - 📸 **Camera**: Take pictures using the device camera
 - 🖼️ **Gallery**: Select images from the photo gallery
+- 📄 **PDF Support**: Upload and process PDF documents
 - 🔍 **Text Extraction**: Extract text from images using OCR API
+- 🤖 **AI-Powered PDF Q&A**: Ask questions about uploaded PDFs using AI models (OpenAI, Ollama)
+- 💬 **Follow-up Questions**: Continue conversations with PDFs using request_id
 - 📋 **Copy to Clipboard**: Copy extracted text with a single tap
-- 🔄 **Extract Another**: Quick workflow to extract text from multiple images
+- 🔄 **Extract Another**: Quick workflow to extract text from multiple images/PDFs
+- 🌓 **Theme Toggle**: Switch between Light, Dark, and System theme modes
+- 💾 **Theme Persistence**: Theme preference saved and restored on app launch
 - 🗂️ **State Management**: Redux with Redux Thunk for API calls
 - 🧭 **Navigation**: React Navigation with authentication guards
-- 🔒 **Permissions**: Proper permission handling for camera and photo library access
+- 🔒 **Permissions**: Proper permission handling for camera, photo library, and document access
 - 🎨 **Toast Notifications**: Non-intrusive feedback for user actions
+- ⌨️ **Keyboard Handling**: Smart keyboard avoidance for better UX
 
 ## Getting Started
 
@@ -66,7 +72,8 @@ npm start
 ├── README.md
 ├── src/
 │   ├── components/
-│   │   └── ImagePickerComponent.tsx
+│   │   ├── ImagePickerComponent.tsx
+│   │   └── ThemeToggle.tsx       # Theme toggle component
 │   ├── navigation/
 │   │   └── AppNavigator.tsx
 │   ├── screens/
@@ -74,30 +81,33 @@ npm start
 │   │   │   ├── HomeScreen.test.tsx
 │   │   │   ├── LoginScreen.test.tsx
 │   │   │   └── RegisterScreen.test.tsx
-│   │   ├── HomeScreen.tsx
+│   │   ├── HomeScreen.tsx        # Image to text screen
+│   │   ├── PdfScreen.tsx         # PDF to text screen
 │   │   ├── LoginScreen.tsx
 │   │   └── RegisterScreen.tsx
 │   ├── store/
 │   │   ├── actions/
 │   │   │   ├── authActions.ts
-│   │   │   └── imageActions.ts
+│   │   │   ├── imageActions.ts
+│   │   │   ├── pdfActions.ts     # PDF extraction and Q&A actions
+│   │   │   └── themeActions.ts   # Theme management actions
 │   │   ├── reducers/
 │   │   │   ├── authReducer.ts
 │   │   │   ├── imageReducer.ts
+│   │   │   ├── pdfReducer.ts      # PDF state management
+│   │   │   ├── themeReducer.ts   # Theme state management
 │   │   │   └── index.ts
 │   │   ├── types/
 │   │   │   ├── authTypes.ts
-│   │   │   └── imageTypes.ts
+│   │   │   ├── imageTypes.ts
+│   │   │   ├── pdfTypes.ts       # PDF-related types
+│   │   │   └── themeTypes.ts     # Theme-related types
 │   │   └── index.ts              # Redux store configuration and typed hooks
 │   ├── types/                    # Additional shared types (placeholder)
 │   └── utils/
 │       └── validation.ts
 ├── tsconfig.json                 # TypeScript configuration
 ```
-
-## API Configuration
-
-The API base URL is defined in `config.ts` and currently points to `https://kingsley-api.name.ng`.
 
 ## Form Validation
 
@@ -114,6 +124,7 @@ The API base URL is defined in `config.ts` and currently points to `https://king
 
 ## User Flow
 
+### Image to Text Flow
 1. **Registration/Login**: User creates account or logs in
 2. **Image Selection**: User takes a picture or selects from gallery
 3. **Text Extraction**: User clicks "Extract Text from Picture"
@@ -121,11 +132,22 @@ The API base URL is defined in `config.ts` and currently points to `https://king
 5. **Copy Text**: User can copy text to clipboard with toast notification
 6. **Extract Another**: User can extract text from another image
 
+### PDF to Text Flow
+1. **PDF Upload**: User uploads a PDF document
+2. **Model Selection**: User selects an AI model (OpenAI or Ollama)
+3. **Question Input**: User enters a question about the PDF
+4. **Text Extraction**: System processes PDF and returns content, description, and request_id
+5. **View Results**: Extracted text and description are displayed
+6. **Follow-up Questions**: User can ask additional questions using the same PDF (request_id persists)
+7. **Fresh PDF**: User can upload a new PDF to start a new session
+
 ## State Management
 
 The app uses Redux with Redux Thunk for:
 - **Authentication state**: user, tokens, isAuthenticated, loading, error
 - **Image extraction state**: extractedText, extracting, error
+- **PDF extraction state**: extractedText, description, requestId, extracting, error
+- **Theme state**: mode (light/dark/system), persisted with AsyncStorage
 - **API call management**: All API calls handled through thunk actions
 - **Navigation guards**: Automatically redirects based on auth state
 
@@ -165,9 +187,12 @@ These permissions are configured in `app.json` and will be requested at runtime 
 
 ### Features
 - `expo-image-picker` - Camera and gallery access
+- `expo-document-picker` - PDF and document file selection
 - `expo-clipboard` - Clipboard functionality
 - `react-native-toast-message` - Toast notifications
 - `expo-status-bar` - Status bar component
+- `@react-native-async-storage/async-storage` - Persistent storage for theme preferences
+- `react-native-paper` - Material Design 3 components with theme support
 
 ### Development
 - `typescript` - TypeScript compiler
@@ -211,8 +236,10 @@ Set any required environment variables in your shell or CI before running the bu
 - **Language**: TypeScript
 - **State Management**: Redux + Redux Thunk
 - **Navigation**: React Navigation v6
-- **UI Components**: React Native core components + Expo vector icons
+- **UI Components**: React Native Paper (Material Design 3) with theme support
 - **API Communication**: Fetch API with FormData support
+- **Storage**: AsyncStorage for persistent theme preferences
+- **Theme System**: Custom light/dark themes with system preference support
 
 ## Development
 
@@ -220,8 +247,26 @@ Set any required environment variables in your shell or CI before running the bu
 The project is fully typed with TypeScript. All components, actions, and reducers are typed for better development experience and error prevention.
 
 ### Code Structure
-- **Components**: Reusable UI components
-- **Screens**: Full-screen components for navigation
+- **Components**: Reusable UI components (ImagePicker, ThemeToggle)
+- **Screens**: Full-screen components for navigation (Home, PDF, Login, Register)
 - **Store**: Redux store with actions, reducers, and types
+  - **Actions**: Async thunk actions for API calls
+  - **Reducers**: State reducers for auth, image, PDF, and theme
+  - **Types**: TypeScript interfaces and types for type safety
 - **Utils**: Utility functions for validation and helpers
+
+### Theme System
+The app supports three theme modes:
+- **Light Mode**: Custom light theme with optimized colors
+- **Dark Mode**: Custom dark theme with optimized colors
+- **System Mode**: Automatically follows device theme preference
+
+Theme preference is persisted using AsyncStorage and restored on app launch. Users can toggle themes using the ThemeToggle component available in the header of Home and PDF screens.
+
+### PDF Features
+- **Initial Upload**: Upload PDF and ask first question
+- **Follow-up Questions**: Continue asking questions using the `request_id` from previous responses
+- **Session Management**: PDF session persists until user uploads a fresh PDF or clears the session
+- **Model Selection**: Choose between OpenAI and Ollama models for processing
+- **Response Display**: Shows both extracted content and description from API responses
 
