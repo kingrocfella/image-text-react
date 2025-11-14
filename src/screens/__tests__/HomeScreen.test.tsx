@@ -66,7 +66,7 @@ const mockToastShow = (Toast as unknown as { show: jest.Mock }).show;
 
 let alertSpy: jest.SpyInstance;
 
-const createState = (overrides?: Partial<{ auth: any; image: any }>) => ({
+const createState = (overrides?: Partial<{ auth: any; image: any; theme: any }>) => ({
   auth: {
     user: { id: '1', name: 'John Doe', email: 'john@example.com' },
     accessToken: 'mock-access-token',
@@ -82,6 +82,10 @@ const createState = (overrides?: Partial<{ auth: any; image: any }>) => ({
     extracting: false,
     error: null,
     ...((overrides?.image) || {}),
+  },
+  theme: {
+    mode: 'system',
+    ...((overrides?.theme) || {}),
   },
 });
 
