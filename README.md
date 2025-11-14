@@ -1,4 +1,4 @@
-# Image to Text Mobile App
+# ScanGenAI Mobile App
 
 A React Native app built with Expo that allows users to extract text from images and PDFs using AI-powered OCR technology. The app includes user authentication, camera functionality, PDF document processing, and seamless text extraction with copy-to-clipboard features.
 
