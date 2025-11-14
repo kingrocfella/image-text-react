@@ -7,9 +7,13 @@ import { API_CONFIG } from "../../../config";
 export const extractPdfTextRequest = (): PdfActionTypes => ({
   type: "EXTRACT_PDF_TEXT_REQUEST",
 });
-export const extractPdfTextSuccess = (text: string): PdfActionTypes => ({
+export const extractPdfTextSuccess = (
+  content: string,
+  description: string,
+  requestId: string
+): PdfActionTypes => ({
   type: "EXTRACT_PDF_TEXT_SUCCESS",
-  payload: text,
+  payload: { content, description, requestId },
 });
 export const extractPdfTextFailure = (error: string): PdfActionTypes => ({
   type: "EXTRACT_PDF_TEXT_FAILURE",
@@ -17,6 +21,23 @@ export const extractPdfTextFailure = (error: string): PdfActionTypes => ({
 });
 export const clearExtractedPdfText = (): PdfActionTypes => ({
   type: "CLEAR_EXTRACTED_PDF_TEXT",
+});
+
+// Action Creators for asking follow-up questions
+export const askPdfQuestionRequest = (): PdfActionTypes => ({
+  type: "ASK_PDF_QUESTION_REQUEST",
+});
+export const askPdfQuestionSuccess = (
+  content: string,
+  description: string,
+  requestId: string
+): PdfActionTypes => ({
+  type: "ASK_PDF_QUESTION_SUCCESS",
+  payload: { content, description, requestId },
+});
+export const askPdfQuestionFailure = (error: string): PdfActionTypes => ({
+  type: "ASK_PDF_QUESTION_FAILURE",
+  payload: error,
 });
 
 // Thunk Action
@@ -66,13 +87,65 @@ export const extractPdfText = (
 
       const data: ExtractPdfTextResponse = await response.json();
 
-      const extractedText: string = data?.content;
-
-      dispatch(extractPdfTextSuccess(extractedText));
+      dispatch(
+        extractPdfTextSuccess(data.content, data.description, data.request_id)
+      );
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "An unknown error occurred";
       dispatch(extractPdfTextFailure(errorMessage));
+      throw error;
+    }
+  };
+};
+
+// Thunk Action for asking follow-up questions using request_id
+export const askPdfQuestion = (
+  requestId: string,
+  query: string,
+  model: string,
+  accessToken: string | null,
+  tokenType: string | null
+): ThunkAction<Promise<void>, RootState, unknown, PdfActionTypes> => {
+  return async (dispatch) => {
+    dispatch(askPdfQuestionRequest());
+
+    try {
+      const formData = new FormData();
+      formData.append("past_request_id", requestId);
+      formData.append("query", query);
+      formData.append("model", model);
+
+      const headers: Record<string, string> = {};
+
+      if (accessToken && tokenType) {
+        headers["Authorization"] = `${tokenType} ${accessToken}`;
+      }
+
+      const response = await fetch(`${API_CONFIG.BASE_URL}/pdf/get/response`, {
+        method: "POST",
+        body: formData,
+        headers: Object.keys(headers).length > 0 ? headers : undefined,
+      });
+
+      if (!response.ok) {
+        const errorData = await response
+          .json()
+          .catch(() => ({ message: "PDF question failed" }));
+        throw new Error(
+          errorData.message || errorData.detail || "PDF question failed"
+        );
+      }
+
+      const data: ExtractPdfTextResponse = await response.json();
+
+      dispatch(
+        askPdfQuestionSuccess(data.content, data.description, data.request_id)
+      );
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "An unknown error occurred";
+      dispatch(askPdfQuestionFailure(errorMessage));
       throw error;
     }
   };
