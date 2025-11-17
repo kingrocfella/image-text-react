@@ -32,6 +32,21 @@ describe('apiCallWithRefresh', () => {
         loading: false,
         error: null,
       },
+      image: {
+        extractedText: null,
+        extracting: false,
+        error: null,
+      },
+      pdf: {
+        extractedText: null,
+        description: null,
+        requestId: null,
+        extracting: false,
+        error: null,
+      },
+      theme: {
+        mode: 'system',
+      },
     })) as jest.MockedFunction<() => RootState>;
 
     mockDispatch = jest.fn((action: any) => {
@@ -114,6 +129,21 @@ describe('apiCallWithRefresh', () => {
         isAuthenticated: true,
         loading: false,
         error: null,
+      },
+      image: {
+        extractedText: null,
+        extracting: false,
+        error: null,
+      },
+      pdf: {
+        extractedText: null,
+        description: null,
+        requestId: null,
+        extracting: false,
+        error: null,
+      },
+      theme: {
+        mode: 'system',
       },
     } as RootState);
 
