@@ -2,6 +2,7 @@ import { ThunkAction } from "redux-thunk";
 import { RootState } from "../index";
 import { ImageActionTypes, ExtractTextResponse } from "../types/imageTypes";
 import { API_CONFIG } from "../../../config";
+import { apiCallWithRefresh } from "../../utils/apiClient";
 
 // Action Creators
 export const extractTextRequest = (): ImageActionTypes => ({
@@ -25,7 +26,7 @@ export const extractText = (
   accessToken: string | null,
   tokenType: string | null
 ): ThunkAction<Promise<void>, RootState, unknown, ImageActionTypes> => {
-  return async (dispatch) => {
+  return async (dispatch, getState) => {
     dispatch(extractTextRequest());
 
     try {
@@ -40,19 +41,16 @@ export const extractText = (
         type: type,
       } as any);
 
-      const headers: Record<string, string> = {};
-
-      if (accessToken && tokenType) {
-        headers["Authorization"] = `${tokenType} ${accessToken}`;
-      }
-
-      const response = await fetch(
+      const response = await apiCallWithRefresh(
         `${API_CONFIG.BASE_URL}/convert/image/text`,
         {
           method: "POST",
           body: formData,
-          headers: Object.keys(headers).length > 0 ? headers : undefined,
-        }
+        },
+        dispatch,
+        getState,
+        accessToken,
+        tokenType
       );
 
       if (!response.ok) {

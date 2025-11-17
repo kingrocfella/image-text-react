@@ -14,7 +14,6 @@ import {
   Text,
   Button,
   Card,
-  Surface,
   TextInput,
   IconButton,
   useTheme,
@@ -28,7 +27,8 @@ import {
   clearExtractedPdfText,
   askPdfQuestion,
 } from "../store/actions/pdfActions";
-import ThemeToggle from "../components/ThemeToggle";
+import AppHeader from "../components/AppHeader";
+import OpenaiPassModal from "../components/OpenaiPassModal";
 
 const PdfScreen: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -43,8 +43,14 @@ const PdfScreen: React.FC = () => {
   const [model, setModel] = useState<string>("");
   const [modelMenuVisible, setModelMenuVisible] = useState(false);
   const [modelError, setModelError] = useState<string | null>(null);
+  const [openaiPass, setOpenaiPass] = useState<string>("");
+  const [openaiPassModalVisible, setOpenaiPassModalVisible] = useState(false);
+  const [pendingModelSelection, setPendingModelSelection] = useState<
+    string | null
+  >(null);
+  const [showOpenaiPass, setShowOpenaiPass] = useState(false);
 
-  const modelOptions = ["openai", "ollama"];
+  const modelOptions = ["openai", "ollama", "deepseek", "gemini"];
 
   const handlePickDocument = async () => {
     try {
@@ -82,13 +88,28 @@ const PdfScreen: React.FC = () => {
       return;
     }
 
+    if (model === "openai" && !openaiPass.trim()) {
+      Alert.alert(
+        "OpenAI Pass Required",
+        "Please enter your OpenAI pass to use this model."
+      );
+      return;
+    }
+
     setModelError(null);
 
     try {
       // If we have a request_id, ask a follow-up question
       if (requestId) {
         await dispatch(
-          askPdfQuestion(requestId, query.trim(), model, accessToken, tokenType)
+          askPdfQuestion(
+            requestId,
+            query.trim(),
+            model,
+            model === "openai" ? openaiPass : undefined,
+            accessToken,
+            tokenType
+          )
         );
       } else {
         // Otherwise, extract text from a new PDF
@@ -102,6 +123,7 @@ const PdfScreen: React.FC = () => {
             pdfName,
             query.trim(),
             model,
+            model === "openai" ? openaiPass : undefined,
             accessToken,
             tokenType
           )
@@ -144,6 +166,7 @@ const PdfScreen: React.FC = () => {
     setQuery("");
     setModel("");
     setModelError(null);
+    setOpenaiPass("");
     dispatch(clearExtractedPdfText());
   };
 
@@ -153,13 +176,44 @@ const PdfScreen: React.FC = () => {
     setQuery("");
     setModel("");
     setModelError(null);
+    setOpenaiPass("");
     dispatch(clearExtractedPdfText());
   };
 
   const handleModelSelect = (selectedModel: string) => {
-    setModel(selectedModel);
-    setModelMenuVisible(false);
-    setModelError(null);
+    if (selectedModel === "openai") {
+      // Show modal for OpenAI pass
+      setPendingModelSelection(selectedModel);
+      setShowOpenaiPass(false); // Reset visibility state
+      setOpenaiPassModalVisible(true);
+      setModelMenuVisible(false);
+    } else {
+      setModel(selectedModel);
+      setModelMenuVisible(false);
+      setModelError(null);
+      setOpenaiPass(""); // Clear OpenAI pass if switching to another model
+      setShowOpenaiPass(false); // Reset visibility state
+    }
+  };
+
+  const handleOpenaiPassSubmit = () => {
+    if (!openaiPass.trim()) {
+      Alert.alert("OpenAI Pass Required", "Please enter your OpenAI pass.");
+      return;
+    }
+    if (pendingModelSelection) {
+      setModel(pendingModelSelection);
+      setModelError(null);
+      setPendingModelSelection(null);
+    }
+    setOpenaiPassModalVisible(false);
+  };
+
+  const handleOpenaiPassCancel = () => {
+    setOpenaiPass("");
+    setShowOpenaiPass(false);
+    setPendingModelSelection(null);
+    setOpenaiPassModalVisible(false);
   };
 
   return (
@@ -168,27 +222,7 @@ const PdfScreen: React.FC = () => {
       style={[styles.container, { backgroundColor: theme.colors.background }]}
       keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
     >
-      <Surface
-        style={[
-          styles.header,
-          {
-            backgroundColor: theme.colors.surface,
-            borderBottomColor: theme.colors.outline,
-          },
-        ]}
-        elevation={1}
-      >
-        <View style={styles.headerContent}>
-          <Text
-            variant="headlineMedium"
-            style={{ color: theme.colors.tertiary, fontWeight: "bold" }}
-            testID="pdf-screen-title"
-          >
-            PDF to Text
-          </Text>
-          <ThemeToggle />
-        </View>
-      </Surface>
+      <AppHeader title="PDF to Text" />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -325,7 +359,12 @@ const PdfScreen: React.FC = () => {
                   icon="text-recognition"
                   onPress={handleExtractText}
                   loading={extracting}
-                  disabled={extracting || !query.trim() || !model}
+                  disabled={
+                    extracting ||
+                    !query.trim() ||
+                    !model ||
+                    (model === "openai" && !openaiPass.trim())
+                  }
                   style={styles.extractButton}
                   contentStyle={styles.buttonContent}
                   testID="extract-pdf-button"
@@ -475,7 +514,12 @@ const PdfScreen: React.FC = () => {
                       icon="text-recognition"
                       onPress={handleExtractText}
                       loading={extracting}
-                      disabled={extracting || !query.trim() || !model}
+                      disabled={
+                        extracting ||
+                        !query.trim() ||
+                        !model ||
+                        (model === "openai" && !openaiPass.trim())
+                      }
                       style={styles.extractButton}
                       contentStyle={styles.buttonContent}
                       testID="ask-question-button"
@@ -563,6 +607,16 @@ const PdfScreen: React.FC = () => {
       </ScrollView>
 
       <StatusBar style="auto" />
+
+      <OpenaiPassModal
+        visible={openaiPassModalVisible}
+        openaiPass={openaiPass}
+        showOpenaiPass={showOpenaiPass}
+        onOpenaiPassChange={setOpenaiPass}
+        onShowOpenaiPassChange={setShowOpenaiPass}
+        onSubmit={handleOpenaiPassSubmit}
+        onCancel={handleOpenaiPassCancel}
+      />
     </KeyboardAvoidingView>
   );
 };
@@ -570,16 +624,6 @@ const PdfScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  header: {
-    padding: 20,
-    paddingTop: 60,
-    borderBottomWidth: 1,
-  },
-  headerContent: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
   },
   scrollContent: {
     flexGrow: 1,

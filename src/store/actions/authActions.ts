@@ -7,6 +7,7 @@ import {
   User,
   LoginResponse,
   RegisterResponse,
+  RefreshTokenResponse,
 } from "../types/authTypes";
 import { API_CONFIG } from "../../../config";
 
@@ -34,6 +35,19 @@ export const registerSuccess = (): AuthActionTypes => ({
 export const registerFailure = (error: string): AuthActionTypes => ({
   type: "REGISTER_FAILURE",
   payload: error,
+});
+
+export const refreshTokenSuccess = (
+  accessToken: string,
+  refreshToken: string,
+  tokenType: string
+): AuthActionTypes => ({
+  type: "REFRESH_TOKEN_SUCCESS",
+  payload: { accessToken, refreshToken, tokenType },
+});
+
+export const refreshTokenFailure = (): AuthActionTypes => ({
+  type: "REFRESH_TOKEN_FAILURE",
 });
 
 export const logoutAction = (): AuthActionTypes => ({ type: "LOGOUT" });
@@ -159,6 +173,55 @@ export const register = (
         error instanceof Error ? error.message : "An unknown error occurred";
       dispatch(registerFailure(errorMessage));
       throw error;
+    }
+  };
+};
+
+export const refreshToken = (): ThunkAction<
+  Promise<boolean>,
+  RootState,
+  unknown,
+  AuthActionTypes
+> => {
+  return async (dispatch, getState) => {
+    const { refreshToken: currentRefreshToken } = getState().auth;
+
+    if (!currentRefreshToken) {
+      dispatch(refreshTokenFailure());
+      return false;
+    }
+
+    try {
+      const response = await fetch(`${API_CONFIG.BASE_URL}/auth/refresh`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          refresh_token: currentRefreshToken,
+        }),
+      });
+
+      if (!response.ok) {
+        dispatch(refreshTokenFailure());
+        return false;
+      }
+
+      const data: RefreshTokenResponse = await response.json();
+
+      dispatch(
+        refreshTokenSuccess(
+          data.access_token,
+          data.refresh_token,
+          data.token_type
+        )
+      );
+
+      return true;
+    } catch (error) {
+      console.error("Refresh token error:", error);
+      dispatch(refreshTokenFailure());
+      return false;
     }
   };
 };

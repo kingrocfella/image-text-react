@@ -64,8 +64,40 @@ jest.mock("react-native-paper", () => {
         <Text>{children}</Text>
       </TouchableOpacity>
     ),
-    TextInput: ({ onChangeText, value, ...props }: any) => (
-      <TextInput onChangeText={onChangeText} value={value} {...props} />
+    TextInput: Object.assign(
+      ({ onChangeText, value, right, left, ...props }: any) => {
+        const RightIcon = right;
+        const LeftIcon = left;
+        return (
+          <View>
+            <TextInput onChangeText={onChangeText} value={value} {...props} />
+            {LeftIcon && (
+              <View testID="left-icon-adornment">
+                <TouchableOpacity onPress={LeftIcon.props?.onPress}>
+                  <Text>LeftIcon</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+            {RightIcon && (
+              <View testID="right-icon-adornment">
+                <TouchableOpacity
+                  onPress={RightIcon.props?.onPress}
+                  testID="toggle-password-visibility"
+                >
+                  <Text>RightIcon</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        );
+      },
+      {
+        Icon: ({ onPress, icon, ...props }: any) => (
+          <TouchableOpacity onPress={onPress} {...props}>
+            <Text>{icon}</Text>
+          </TouchableOpacity>
+        ),
+      }
     ),
     Card: ({ children, ...props }: any) => <View {...props}>{children}</View>,
     Surface: ({ children, ...props }: any) => (
@@ -78,6 +110,34 @@ jest.mock("react-native-paper", () => {
     ),
     ActivityIndicator: ({ testID, ...props }: any) => (
       <View testID={testID || "activity-indicator"} {...props} />
+    ),
+    Portal: ({ children }: any) => <View>{children}</View>,
+    Dialog: Object.assign(
+      ({ visible, children, onDismiss, ...props }: any) => {
+        if (!visible) return null;
+        return (
+          <View testID="dialog" {...props}>
+            {children}
+          </View>
+        );
+      },
+      {
+        Title: ({ children, ...props }: any) => (
+          <View testID="dialog-title" {...props}>
+            <Text>{children}</Text>
+          </View>
+        ),
+        Content: ({ children, ...props }: any) => (
+          <View testID="dialog-content" {...props}>
+            {children}
+          </View>
+        ),
+        Actions: ({ children, ...props }: any) => (
+          <View testID="dialog-actions" {...props}>
+            {children}
+          </View>
+        ),
+      }
     ),
     Menu: Object.assign(
       ({ visible, onDismiss, anchor, children, ...props }: any) => {
@@ -192,7 +252,7 @@ const renderPdfScreen = () => render(<PdfScreen />);
 describe("PdfScreen", () => {
   it("renders the PDF screen title", () => {
     const { getByTestId } = renderPdfScreen();
-    expect(getByTestId("pdf-screen-title")).toBeTruthy();
+    expect(getByTestId("app-header-title")).toBeTruthy();
   });
 
   it("renders upload button when no PDF is selected", () => {
@@ -269,10 +329,10 @@ describe("PdfScreen", () => {
       fireEvent.press(modelDropdown);
     });
 
-    // Wait for menu items to appear and select openai
+    // Select a model that doesn't require OpenAI pass (e.g., ollama)
     await act(async () => {
-      const openaiOption = getByTestId("model-option-openai");
-      fireEvent.press(openaiOption);
+      const ollamaOption = getByTestId("model-option-ollama");
+      fireEvent.press(ollamaOption);
     });
 
     const questionInput = getByTestId("question-input");
@@ -286,7 +346,8 @@ describe("PdfScreen", () => {
       "mock-pdf-uri",
       "test.pdf",
       "What is this document about?",
-      "openai",
+      "ollama",
+      undefined,
       "mock-access-token",
       "Bearer"
     );
@@ -455,9 +516,10 @@ describe("PdfScreen", () => {
       fireEvent.press(modelDropdown);
     });
 
+    // Select a model that doesn't require OpenAI pass (e.g., ollama)
     await act(async () => {
-      const openaiOption = getByTestId("model-option-followup-openai");
-      fireEvent.press(openaiOption);
+      const ollamaOption = getByTestId("model-option-followup-ollama");
+      fireEvent.press(ollamaOption);
     });
 
     // Enter question
@@ -472,7 +534,8 @@ describe("PdfScreen", () => {
     expect(mockAskPdfQuestion).toHaveBeenCalledWith(
       "test-request-id",
       "What is the main topic?",
-      "openai",
+      "ollama",
+      undefined,
       "mock-access-token",
       "Bearer"
     );

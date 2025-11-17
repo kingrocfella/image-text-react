@@ -119,12 +119,12 @@ const renderHomeScreen = () => render(<HomeScreen />);
 describe('HomeScreen', () => {
   it('renders the app title', () => {
     const { getByTestId } = renderHomeScreen();
-    expect(getByTestId('app-title').props.children).toBe('Image to Text');
+    expect(getByTestId('app-header-title').props.children).toBe('Image to Text');
   });
 
   it('displays welcome message when user exists', () => {
     const { getByTestId } = renderHomeScreen();
-    expect(getByTestId('welcome-text').props.children).toContain('John Doe');
+    expect(getByTestId('app-header-subtitle').props.children).toContain('John Doe');
   });
 
   it('renders image picker when no image is selected', () => {
