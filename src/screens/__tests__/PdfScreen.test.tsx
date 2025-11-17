@@ -291,6 +291,51 @@ describe("PdfScreen", () => {
     expect(getByTestId("question-input")).toBeTruthy();
   });
 
+  it("shows Extract Another button when PDF is uploaded but not extracted", async () => {
+    mockGetDocumentAsync.mockResolvedValue({
+      canceled: false,
+      assets: [{ uri: "mock-pdf-uri", name: "test.pdf" }],
+    });
+
+    const { getByTestId } = renderPdfScreen();
+
+    await act(async () => {
+      fireEvent.press(getByTestId("upload-pdf-button"));
+    });
+
+    expect(getByTestId("extract-another-upload-button")).toBeTruthy();
+  });
+
+  it("allows changing PDF file when Extract Another button is pressed before extraction", async () => {
+    mockGetDocumentAsync
+      .mockResolvedValueOnce({
+        canceled: false,
+        assets: [{ uri: "mock-pdf-uri-1", name: "test1.pdf" }],
+      })
+      .mockResolvedValueOnce({
+        canceled: false,
+        assets: [{ uri: "mock-pdf-uri-2", name: "test2.pdf" }],
+      });
+
+    const { getByTestId } = renderPdfScreen();
+
+    // Upload first PDF
+    await act(async () => {
+      fireEvent.press(getByTestId("upload-pdf-button"));
+    });
+
+    expect(getByTestId("pdf-name").props.children).toBe("test1.pdf");
+
+    // Press Extract Another button to change PDF
+    await act(async () => {
+      fireEvent.press(getByTestId("extract-another-upload-button"));
+    });
+
+    // Should show the new PDF name
+    expect(getByTestId("pdf-name").props.children).toBe("test2.pdf");
+    expect(mockGetDocumentAsync).toHaveBeenCalledTimes(2);
+  });
+
   it("disables extract button when question is empty", async () => {
     mockGetDocumentAsync.mockResolvedValue({
       canceled: false,

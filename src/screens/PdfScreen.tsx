@@ -375,6 +375,20 @@ const PdfScreen: React.FC = () => {
                     ? "Ask Question"
                     : "Extract Text from PDF"}
                 </Button>
+
+                {pdfUri && !requestId && (
+                  <Button
+                    mode="outlined"
+                    icon="file-replace"
+                    onPress={handlePickDocument}
+                    disabled={extracting}
+                    style={styles.extractAnotherButton}
+                    contentStyle={styles.buttonContent}
+                    testID="extract-another-upload-button"
+                  >
+                    Extract Another
+                  </Button>
+                )}
               </>
             )}
 
