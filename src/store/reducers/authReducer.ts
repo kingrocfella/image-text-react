@@ -45,6 +45,24 @@ const authReducer = (state = initialState, action: AuthActionTypes): AuthState =
         isAuthenticated: false,
         user: null,
       };
+    case 'REFRESH_TOKEN_SUCCESS':
+      return {
+        ...state,
+        accessToken: action.payload.accessToken,
+        refreshToken: action.payload.refreshToken,
+        tokenType: action.payload.tokenType,
+        error: null,
+      };
+    case 'REFRESH_TOKEN_FAILURE':
+      return {
+        ...state,
+        user: null,
+        accessToken: null,
+        refreshToken: null,
+        tokenType: null,
+        isAuthenticated: false,
+        error: null,
+      };
     case 'LOGOUT':
       return {
         ...state,

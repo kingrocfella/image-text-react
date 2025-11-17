@@ -6,7 +6,6 @@ import {
   Text,
   Button,
   Card,
-  Surface,
   IconButton,
   useTheme,
   ActivityIndicator,
@@ -16,7 +15,7 @@ import { useAppDispatch, useAppSelector } from "../store";
 import { logout } from "../store/actions/authActions";
 import { extractText, clearExtractedText } from "../store/actions/imageActions";
 import ImagePickerComponent from "../components/ImagePickerComponent";
-import ThemeToggle from "../components/ThemeToggle";
+import AppHeader from "../components/AppHeader";
 
 const HomeScreen: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -82,48 +81,12 @@ const HomeScreen: React.FC = () => {
     <View
       style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
-      <Surface
-        style={[
-          styles.header,
-          {
-            backgroundColor: theme.colors.surface,
-            borderBottomColor: theme.colors.outline,
-          },
-        ]}
-        elevation={1}
-      >
-        <View style={styles.headerContent}>
-          <View style={styles.headerLeft}>
-            <Text
-              variant="headlineMedium"
-              style={{ color: theme.colors.primary, fontWeight: "bold" }}
-              testID="app-title"
-            >
-              Image to Text
-            </Text>
-            {user && (
-              <Text
-                variant="bodyMedium"
-                style={{ color: theme.colors.onSurfaceVariant }}
-                testID="welcome-text"
-              >
-                Welcome, {user.name}!
-              </Text>
-            )}
-          </View>
-          <View style={styles.headerRight}>
-            <ThemeToggle />
-            <IconButton
-              icon="logout"
-              iconColor={theme.colors.error}
-              size={24}
-              onPress={handleLogout}
-              testID="logout-button"
-              style={styles.logoutButton}
-            />
-          </View>
-        </View>
-      </Surface>
+      <AppHeader
+        title="Image to Text"
+        subtitle={user ? `Welcome, ${user.name}!` : undefined}
+        onLogout={handleLogout}
+        showLogout={true}
+      />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
@@ -261,27 +224,6 @@ const HomeScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  header: {
-    padding: 16,
-    paddingTop: 60,
-    borderBottomWidth: 1,
-  },
-  headerContent: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  headerLeft: {
-    flex: 1,
-  },
-  headerRight: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  logoutButton: {
-    margin: 0,
   },
   scrollContent: {
     flexGrow: 1,

@@ -37,6 +37,12 @@ export interface RegisterCredentials {
   password: string;
 }
 
+export interface RefreshTokenResponse {
+  access_token: string;
+  refresh_token: string;
+  token_type: string;
+}
+
 export type AuthActionTypes =
   | { type: 'LOGIN_REQUEST' }
   | { type: 'LOGIN_SUCCESS'; payload: { user: User; accessToken: string; refreshToken: string; tokenType: string } }
@@ -44,5 +50,7 @@ export type AuthActionTypes =
   | { type: 'REGISTER_REQUEST' }
   | { type: 'REGISTER_SUCCESS' }
   | { type: 'REGISTER_FAILURE'; payload: string }
+  | { type: 'REFRESH_TOKEN_SUCCESS'; payload: { accessToken: string; refreshToken: string; tokenType: string } }
+  | { type: 'REFRESH_TOKEN_FAILURE' }
   | { type: 'LOGOUT' };
 

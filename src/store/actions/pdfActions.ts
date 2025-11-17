@@ -2,6 +2,7 @@ import { ThunkAction } from "redux-thunk";
 import { RootState } from "../index";
 import { PdfActionTypes, ExtractPdfTextResponse } from "../types/pdfTypes";
 import { API_CONFIG } from "../../../config";
+import { apiCallWithRefresh } from "../../utils/apiClient";
 
 // Action Creators
 export const extractPdfTextRequest = (): PdfActionTypes => ({
@@ -46,10 +47,11 @@ export const extractPdfText = (
   pdfName: string,
   query: string,
   model: string,
+  openaiPass: string | undefined,
   accessToken: string | null,
   tokenType: string | null
 ): ThunkAction<Promise<void>, RootState, unknown, PdfActionTypes> => {
-  return async (dispatch) => {
+  return async (dispatch, getState) => {
     dispatch(extractPdfTextRequest());
 
     try {
@@ -64,17 +66,21 @@ export const extractPdfText = (
       formData.append("query", query);
       formData.append("model", model);
 
-      const headers: Record<string, string> = {};
-
-      if (accessToken && tokenType) {
-        headers["Authorization"] = `${tokenType} ${accessToken}`;
+      if (model === "openai" && openaiPass) {
+        formData.append("openai_pass", openaiPass);
       }
 
-      const response = await fetch(`${API_CONFIG.BASE_URL}/pdf/get/response`, {
-        method: "POST",
-        body: formData,
-        headers: Object.keys(headers).length > 0 ? headers : undefined,
-      });
+      const response = await apiCallWithRefresh(
+        `${API_CONFIG.BASE_URL}/pdf/get/response`,
+        {
+          method: "POST",
+          body: formData,
+        },
+        dispatch,
+        getState,
+        accessToken,
+        tokenType
+      );
 
       if (!response.ok) {
         const errorData = await response
@@ -104,10 +110,11 @@ export const askPdfQuestion = (
   requestId: string,
   query: string,
   model: string,
+  openaiPass: string | undefined,
   accessToken: string | null,
   tokenType: string | null
 ): ThunkAction<Promise<void>, RootState, unknown, PdfActionTypes> => {
-  return async (dispatch) => {
+  return async (dispatch, getState) => {
     dispatch(askPdfQuestionRequest());
 
     try {
@@ -116,17 +123,21 @@ export const askPdfQuestion = (
       formData.append("query", query);
       formData.append("model", model);
 
-      const headers: Record<string, string> = {};
-
-      if (accessToken && tokenType) {
-        headers["Authorization"] = `${tokenType} ${accessToken}`;
+      if (model === "openai" && openaiPass) {
+        formData.append("openai_pass", openaiPass);
       }
 
-      const response = await fetch(`${API_CONFIG.BASE_URL}/pdf/get/response`, {
-        method: "POST",
-        body: formData,
-        headers: Object.keys(headers).length > 0 ? headers : undefined,
-      });
+      const response = await apiCallWithRefresh(
+        `${API_CONFIG.BASE_URL}/pdf/get/response`,
+        {
+          method: "POST",
+          body: formData,
+        },
+        dispatch,
+        getState,
+        accessToken,
+        tokenType
+      );
 
       if (!response.ok) {
         const errorData = await response
