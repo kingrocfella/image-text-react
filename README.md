@@ -1,6 +1,6 @@
 # ScanGenAI Mobile App
 
-A React Native app built with Expo that allows users to extract text from images and PDFs using AI-powered OCR technology. The app includes user authentication, camera functionality, PDF document processing, and seamless text extraction with copy-to-clipboard features.
+A React Native app built with Expo that allows users to extract text from images, PDFs, and audio using AI-powered OCR and transcription technology. The app includes user authentication, camera functionality, PDF document processing, audio recording/upload, and seamless text extraction with copy-to-clipboard features.
 
 ## Features
 
@@ -9,16 +9,19 @@ A React Native app built with Expo that allows users to extract text from images
 - 📸 **Camera**: Take pictures using the device camera
 - 🖼️ **Gallery**: Select images from the photo gallery
 - 📄 **PDF Support**: Upload and process PDF documents
+- 🎤 **Audio Recording**: Record audio directly in the app using expo-audio
+- 🎵 **Audio Upload**: Upload audio files from device storage
 - 🔍 **Text Extraction**: Extract text from images using OCR API
+- 🎙️ **Audio Transcription**: Transcribe audio recordings and files to text
 - 🤖 **AI-Powered PDF Q&A**: Ask questions about uploaded PDFs using AI models (OpenAI, Ollama, DeepSeek, Gemini)
 - 💬 **Follow-up Questions**: Continue conversations with PDFs using request_id
 - 📋 **Copy to Clipboard**: Copy extracted text with a single tap
-- 🔄 **Extract Another**: Quick workflow to extract text from multiple images/PDFs
+- 🔄 **Extract Another**: Quick workflow to extract text from multiple images/PDFs/audio files
 - 🌓 **Theme Toggle**: Switch between Light, Dark, and System theme modes
 - 💾 **Theme Persistence**: Theme preference saved and restored on app launch
 - 🗂️ **State Management**: Redux with Redux Thunk for API calls
 - 🧭 **Navigation**: React Navigation with authentication guards
-- 🔒 **Permissions**: Proper permission handling for camera, photo library, and document access
+- 🔒 **Permissions**: Proper permission handling for camera, photo library, microphone, and document access
 - 🎨 **Toast Notifications**: Non-intrusive feedback for user actions
 - ⌨️ **Keyboard Handling**: Smart keyboard avoidance for better UX
 - 🧩 **Reusable Components**: AppHeader and OpenaiPassModal components for consistent UI
@@ -88,6 +91,7 @@ npm start
 │   │   │   └── RegisterScreen.test.tsx
 │   │   ├── HomeScreen.tsx        # Image to text screen
 │   │   ├── PdfScreen.tsx         # PDF to text screen
+│   │   ├── SoundScreen.tsx       # Audio to text screen
 │   │   ├── LoginScreen.tsx
 │   │   └── RegisterScreen.tsx
 │   ├── store/
@@ -97,6 +101,7 @@ npm start
 │   │   │   ├── authActions.ts
 │   │   │   ├── imageActions.ts
 │   │   │   ├── pdfActions.ts     # PDF extraction and Q&A actions
+│   │   │   ├── audioActions.ts   # Audio transcription actions
 │   │   │   └── themeActions.ts   # Theme management actions
 │   │   ├── reducers/
 │   │   │   ├── __tests__/
@@ -104,12 +109,14 @@ npm start
 │   │   │   ├── authReducer.ts
 │   │   │   ├── imageReducer.ts
 │   │   │   ├── pdfReducer.ts      # PDF state management
+│   │   │   ├── audioReducer.ts    # Audio state management
 │   │   │   ├── themeReducer.ts   # Theme state management
 │   │   │   └── index.ts
 │   │   ├── types/
 │   │   │   ├── authTypes.ts
 │   │   │   ├── imageTypes.ts
 │   │   │   ├── pdfTypes.ts       # PDF-related types
+│   │   │   ├── audioTypes.ts     # Audio-related types
 │   │   │   └── themeTypes.ts     # Theme-related types
 │   │   └── index.ts              # Redux store configuration and typed hooks
 │   ├── types/                    # Additional shared types (placeholder)
@@ -154,12 +161,23 @@ npm start
 7. **Follow-up Questions**: User can ask additional questions using the same PDF (request_id persists)
 8. **Fresh PDF**: User can upload a new PDF to start a new session
 
+### Audio to Text Flow
+1. **Audio Input**: User chooses to record audio or upload an audio file
+   - **Record**: Tap "Record Audio" to start recording, tap "Stop Recording" when done
+   - **Upload**: Tap "Upload Audio" to select an audio file from device storage
+2. **Audio Preview**: Recording duration or file name is displayed
+3. **Transcription**: User clicks "Transcribe Audio"
+4. **View Results**: Transcribed text is displayed with copy icon
+5. **Copy Text**: User can copy text to clipboard with toast notification
+6. **Transcribe Another**: User can transcribe another audio recording or file
+
 ## State Management
 
 The app uses Redux with Redux Thunk for:
 - **Authentication state**: user, tokens (accessToken, refreshToken), isAuthenticated, loading, error
 - **Image extraction state**: extractedText, extracting, error
 - **PDF extraction state**: extractedText, description, requestId, extracting, error
+- **Audio transcription state**: transcribedText, transcribing, error
 - **Theme state**: mode (light/dark/system), persisted with AsyncStorage
 - **API call management**: All API calls handled through thunk actions with automatic token refresh
 - **Token refresh**: Automatic token refresh on 401 errors, logout on refresh failure
@@ -175,8 +193,8 @@ The app uses Redux with Redux Thunk for:
 ## Permissions
 
 The app requests the following permissions:
-- **iOS**: Camera and Photo Library access
-- **Android**: Camera, Read/Write External Storage
+- **iOS**: Camera, Photo Library, and Microphone access
+- **Android**: Camera, Read/Write External Storage, and Record Audio
 
 These permissions are configured in `app.json` and will be requested at runtime when needed.
 
@@ -202,6 +220,7 @@ These permissions are configured in `app.json` and will be requested at runtime 
 ### Features
 - `expo-image-picker` - Camera and gallery access
 - `expo-document-picker` - PDF and document file selection
+- `expo-audio` - Audio recording and playback
 - `expo-clipboard` - Clipboard functionality
 - `react-native-toast-message` - Toast notifications
 - `expo-status-bar` - Status bar component
@@ -228,16 +247,19 @@ npm run test
 
 ### Test Coverage
 
-- **Screens**: HomeScreen, PdfScreen, LoginScreen, RegisterScreen
+- **Screens**: HomeScreen, PdfScreen, SoundScreen, LoginScreen, RegisterScreen
 - **Reducers**: authReducer (including refresh token actions)
 - **Actions**: authActions (including refresh token functionality)
 - **Utilities**: apiClient (automatic token refresh on 401 errors)
+
+**Test Results**: 79 tests passing across 8 test suites
 
 Run individual suites with:
 
 ```bash
 npx jest src/screens/__tests__/HomeScreen.test.tsx
 npx jest src/screens/__tests__/PdfScreen.test.tsx
+npx jest src/screens/__tests__/SoundScreen.test.tsx
 npx jest src/screens/__tests__/LoginScreen.test.tsx
 npx jest src/screens/__tests__/RegisterScreen.test.tsx
 npx jest src/store/reducers/__tests__/authReducer.test.ts
@@ -245,7 +267,7 @@ npx jest src/store/actions/__tests__/authActions.test.ts
 npx jest src/utils/__tests__/apiClient.test.ts
 ```
 
-The Jest configuration is located in `jest.config.js` and is preconfigured for Expo SDK 54. Tests include mocks for AsyncStorage, SafeAreaContext, and icon libraries.
+The Jest configuration is located in `jest.config.js` and is preconfigured for Expo SDK 54. Tests include mocks for AsyncStorage, SafeAreaContext, expo-audio, and icon libraries.
 
 ## Deployment
 
@@ -279,10 +301,10 @@ The project is fully typed with TypeScript. All components, actions, and reducer
   - **ImagePickerComponent**: Camera and gallery image selection
   - **OpenaiPassModal**: Secure modal for OpenAI pass input with visibility toggle
   - **ThemeToggle**: Theme mode selector (light/dark/system)
-- **Screens**: Full-screen components for navigation (Home, PDF, Login, Register)
+- **Screens**: Full-screen components for navigation (Home, PDF, Sound, Login, Register)
 - **Store**: Redux store with actions, reducers, and types
   - **Actions**: Async thunk actions for API calls with automatic token refresh
-  - **Reducers**: State reducers for auth (including refresh token), image, PDF, and theme
+  - **Reducers**: State reducers for auth (including refresh token), image, PDF, audio, and theme
   - **Types**: TypeScript interfaces and types for type safety
 - **Utils**: Utility functions
   - **apiClient**: API call wrapper with automatic 401 handling and token refresh
