@@ -107,18 +107,33 @@ const HomeScreen: React.FC = () => {
             </Card>
 
             {!extractedText && (
-              <Button
-                mode="contained"
-                icon="text-recognition"
-                onPress={handleExtractText}
-                loading={extracting}
-                disabled={extracting}
-                style={styles.extractButton}
-                contentStyle={styles.buttonContent}
-                testID="extract-button"
-              >
-                {extracting ? "Extracting..." : "Extract Text from Picture"}
-              </Button>
+              <>
+                <Button
+                  mode="contained"
+                  icon="text-recognition"
+                  onPress={handleExtractText}
+                  loading={extracting}
+                  disabled={extracting}
+                  style={styles.extractButton}
+                  contentStyle={styles.buttonContent}
+                  testID="extract-button"
+                >
+                  {extracting ? "Extracting..." : "Extract Text from Picture"}
+                </Button>
+
+                {!extracting && (
+                  <Button
+                    mode="outlined"
+                    icon="image-refresh"
+                    onPress={handleExtractAnother}
+                    style={styles.changeImageButton}
+                    contentStyle={styles.buttonContent}
+                    testID="change-image-button"
+                  >
+                    Change Image
+                  </Button>
+                )}
+              </>
             )}
 
             {extracting && (
@@ -290,6 +305,10 @@ const styles = StyleSheet.create({
   },
   extractAnotherButton: {
     marginTop: 20,
+    borderRadius: 12,
+  },
+  changeImageButton: {
+    marginBottom: 20,
     borderRadius: 12,
   },
 });

@@ -9,6 +9,7 @@ import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import HomeScreen from '../screens/HomeScreen';
 import PdfScreen from '../screens/PdfScreen';
+import SoundScreen from '../screens/SoundScreen';
 
 export type RootStackParamList = {
   Login: undefined;
@@ -19,6 +20,7 @@ export type RootStackParamList = {
 export type MainTabParamList = {
   Home: undefined;
   PDF: undefined;
+  Sound: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -37,6 +39,8 @@ const MainTabNavigator: React.FC = () => {
             iconName = focused ? 'camera' : 'camera-outline';
           } else if (route.name === 'PDF') {
             iconName = focused ? 'document-text' : 'document-text-outline';
+          } else if (route.name === 'Sound') {
+            iconName = focused ? 'mic' : 'mic-outline';
           } else {
             iconName = 'help-outline';
           }
@@ -55,6 +59,7 @@ const MainTabNavigator: React.FC = () => {
     >
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="PDF" component={PdfScreen} />
+      <Tab.Screen name="Sound" component={SoundScreen} />
     </Tab.Navigator>
   );
 };
