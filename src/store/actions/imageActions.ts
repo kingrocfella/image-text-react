@@ -1,8 +1,9 @@
 import { ThunkAction } from "redux-thunk";
 import { RootState } from "../index";
-import { ImageActionTypes, ExtractTextResponse } from "../types/imageTypes";
+import { ImageActionTypes, QueuedImageJobResponse } from "../types/imageTypes";
 import { API_CONFIG } from "../../../config";
 import { apiCallWithRefresh } from "../../utils/apiClient";
+import { pollJobStatus } from "./helpers/pollJobStatus";
 
 // Action Creators
 export const extractTextRequest = (): ImageActionTypes => ({
@@ -62,11 +63,18 @@ export const extractText = (
         );
       }
 
-      const data: ExtractTextResponse = await response.json();
+      const queuedData: QueuedImageJobResponse = await response.json();
 
-      const extractedText: string = data?.message;
+      // Poll for job completion
+      const data = await pollJobStatus(
+        queuedData.message_id,
+        dispatch,
+        getState,
+        accessToken,
+        tokenType
+      );
 
-      dispatch(extractTextSuccess(extractedText));
+      dispatch(extractTextSuccess(data.content));
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "An unknown error occurred";

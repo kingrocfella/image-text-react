@@ -22,6 +22,7 @@ import {
 } from "react-native-paper";
 import Toast from "react-native-toast-message";
 import { useAppDispatch, useAppSelector } from "../store";
+import MarkdownRenderer from "../components/MarkdownRenderer";
 import {
   extractPdfText,
   clearExtractedPdfText,
@@ -455,13 +456,9 @@ const PdfScreen: React.FC = () => {
                       testID="copy-button"
                     />
                   </View>
-                  <Text
-                    variant="bodyMedium"
-                    style={{ color: theme.colors.tertiary }}
-                    testID="extracted-text"
-                  >
+                  <MarkdownRenderer testID="extracted-text">
                     {extractedText}
-                  </Text>
+                  </MarkdownRenderer>
                 </Card>
 
                 {requestId && (

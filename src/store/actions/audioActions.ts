@@ -1,8 +1,9 @@
 import { ThunkAction } from "redux-thunk";
 import { RootState } from "../index";
-import { AudioActionTypes, TranscribeAudioResponse } from "../types/audioTypes";
+import { AudioActionTypes, QueuedAudioJobResponse } from "../types/audioTypes";
 import { API_CONFIG } from "../../../config";
 import { apiCallWithRefresh } from "../../utils/apiClient";
+import { pollJobStatus } from "./helpers/pollJobStatus";
 
 // Action Creators
 export const transcribeAudioRequest = (): AudioActionTypes => ({
@@ -76,11 +77,18 @@ export const transcribeAudio = (
         );
       }
 
-      const data: TranscribeAudioResponse = await response.json();
+      const queuedData: QueuedAudioJobResponse = await response.json();
 
-      const transcribedText: string = data?.content;
+      // Poll for job completion
+      const data = await pollJobStatus(
+        queuedData.message_id,
+        dispatch,
+        getState,
+        accessToken,
+        tokenType
+      );
 
-      dispatch(transcribeAudioSuccess(transcribedText));
+      dispatch(transcribeAudioSuccess(data.content));
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "An unknown error occurred";

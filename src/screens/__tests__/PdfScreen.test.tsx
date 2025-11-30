@@ -29,6 +29,14 @@ jest.mock("../../components/ThemeToggle", () => {
   return () => <View testID="theme-toggle" />;
 });
 
+jest.mock("../../components/MarkdownRenderer", () => {
+  const React = require("react");
+  const { Text } = require("react-native");
+  return ({ children, testID }: { children: string; testID?: string }) => (
+    <Text testID={testID}>{children}</Text>
+  );
+});
+
 jest.mock("expo-document-picker", () => ({
   getDocumentAsync: jest.fn(),
 }));

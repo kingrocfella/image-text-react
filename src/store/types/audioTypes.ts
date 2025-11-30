@@ -4,6 +4,12 @@ export interface TranscribeAudioResponse {
   request_id: string;
 }
 
+export interface QueuedAudioJobResponse {
+  message: string;
+  message_id: string;
+  status: "queued" | "pending";
+}
+
 export interface AudioState {
   transcribedText: string | null;
   transcribing: boolean;
@@ -11,7 +17,7 @@ export interface AudioState {
 }
 
 export type AudioActionTypes =
-  | { type: 'TRANSCRIBE_AUDIO_REQUEST' }
-  | { type: 'TRANSCRIBE_AUDIO_SUCCESS'; payload: string }
-  | { type: 'TRANSCRIBE_AUDIO_FAILURE'; payload: string }
-  | { type: 'CLEAR_TRANSCRIBED_TEXT' };
+  | { type: "TRANSCRIBE_AUDIO_REQUEST" }
+  | { type: "TRANSCRIBE_AUDIO_SUCCESS"; payload: string }
+  | { type: "TRANSCRIBE_AUDIO_FAILURE"; payload: string }
+  | { type: "CLEAR_TRANSCRIBED_TEXT" };
