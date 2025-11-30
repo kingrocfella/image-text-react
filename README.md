@@ -1,6 +1,6 @@
 # ScanGenAI Mobile App
 
-A React Native app built with Expo that allows users to extract text from images, PDFs, and audio using AI-powered OCR and transcription technology. The app includes user authentication, camera functionality, PDF document processing, audio recording/upload, and seamless text extraction with copy-to-clipboard features.
+A React Native app built with Expo that allows users to extract text from images, PDFs, and audio using AI-powered OCR and transcription technology. The app features a queue-based job processing system with automatic polling, markdown rendering for rich text display, user authentication, camera functionality, PDF document Q&A with multiple AI models (OpenAI, Ollama, DeepSeek, Gemini), audio recording/upload, and seamless text extraction with copy-to-clipboard features.
 
 ## Features
 
@@ -23,8 +23,8 @@ A React Native app built with Expo that allows users to extract text from images
 - 🧭 **Navigation**: React Navigation with authentication guards
 - 🔒 **Permissions**: Proper permission handling for camera, photo library, microphone, and document access
 - 🎨 **Toast Notifications**: Non-intrusive feedback for user actions
-- ⌨️ **Keyboard Handling**: Smart keyboard avoidance for better UX
-- 🧩 **Reusable Components**: AppHeader and OpenaiPassModal components for consistent UI
+- ⏳ **Job Queue Polling**: Background job processing with automatic status polling for long-running operations
+- 📝 **Markdown Rendering**: Rich markdown display for PDF extraction results
 
 ## Getting Started
 
@@ -79,6 +79,7 @@ npm start
 │   ├── components/
 │   │   ├── AppHeader.tsx         # Reusable header component
 │   │   ├── ImagePickerComponent.tsx
+│   │   ├── MarkdownRenderer.tsx  # Reusable markdown display component
 │   │   ├── OpenaiPassModal.tsx   # Modal for OpenAI pass input
 │   │   └── ThemeToggle.tsx       # Theme toggle component
 │   ├── navigation/
@@ -88,7 +89,8 @@ npm start
 │   │   │   ├── HomeScreen.test.tsx
 │   │   │   ├── LoginScreen.test.tsx
 │   │   │   ├── PdfScreen.test.tsx
-│   │   │   └── RegisterScreen.test.tsx
+│   │   │   ├── RegisterScreen.test.tsx
+│   │   │   └── SoundScreen.test.tsx
 │   │   ├── HomeScreen.tsx        # Image to text screen
 │   │   ├── PdfScreen.tsx         # PDF to text screen
 │   │   ├── SoundScreen.tsx       # Audio to text screen
@@ -98,10 +100,12 @@ npm start
 │   │   ├── actions/
 │   │   │   ├── __tests__/
 │   │   │   │   └── authActions.test.ts
+│   │   │   ├── helpers/
+│   │   │   │   └── pollJobStatus.ts  # Job polling helper for queue-based APIs
 │   │   │   ├── authActions.ts
-│   │   │   ├── imageActions.ts
-│   │   │   ├── pdfActions.ts     # PDF extraction and Q&A actions
-│   │   │   ├── audioActions.ts   # Audio transcription actions
+│   │   │   ├── imageActions.ts   # Image extraction with job polling
+│   │   │   ├── pdfActions.ts     # PDF extraction and Q&A with job polling
+│   │   │   ├── audioActions.ts   # Audio transcription with job polling
 │   │   │   └── themeActions.ts   # Theme management actions
 │   │   ├── reducers/
 │   │   │   ├── __tests__/
@@ -143,23 +147,16 @@ npm start
 
 ## User Flow
 
-### Image to Text Flow
-1. **Registration/Login**: User creates account or logs in
-2. **Image Selection**: User takes a picture or selects from gallery
-3. **Text Extraction**: User clicks "Extract Text from Picture"
-4. **View Results**: Extracted text is displayed with copy icon
-5. **Copy Text**: User can copy text to clipboard with toast notification
-6. **Extract Another**: User can extract text from another image
-
 ### PDF to Text Flow
 1. **PDF Upload**: User uploads a PDF document
 2. **Model Selection**: User selects an AI model (OpenAI, Ollama, DeepSeek, or Gemini)
 3. **OpenAI Pass Entry** (if OpenAI selected): Modal appears for secure OpenAI pass input with visibility toggle
 4. **Question Input**: User enters a question about the PDF
-5. **Text Extraction**: System processes PDF and returns content, description, and request_id
-6. **View Results**: Extracted text and description are displayed
-7. **Follow-up Questions**: User can ask additional questions using the same PDF (request_id persists)
-8. **Fresh PDF**: User can upload a new PDF to start a new session
+5. **Job Queuing**: System queues the job and returns a message_id
+6. **Background Polling**: App polls job status every 10 seconds until completion
+7. **View Results**: Extracted text (rendered as markdown) and description are displayed
+8. **Follow-up Questions**: User can ask additional questions using the same PDF (request_id persists)
+9. **Fresh PDF**: User can upload a new PDF to start a new session
 
 ### Audio to Text Flow
 1. **Audio Input**: User chooses to record audio or upload an audio file
@@ -167,9 +164,20 @@ npm start
    - **Upload**: Tap "Upload Audio" to select an audio file from device storage
 2. **Audio Preview**: Recording duration or file name is displayed
 3. **Transcription**: User clicks "Transcribe Audio"
-4. **View Results**: Transcribed text is displayed with copy icon
-5. **Copy Text**: User can copy text to clipboard with toast notification
-6. **Transcribe Another**: User can transcribe another audio recording or file
+4. **Job Queuing**: System queues the transcription job and returns a message_id
+5. **Background Polling**: App polls job status every 10 seconds until completion
+6. **View Results**: Transcribed text is displayed with copy icon
+7. **Copy Text**: User can copy text to clipboard with toast notification
+8. **Transcribe Another**: User can transcribe another audio recording or file
+
+### Image to Text Flow (with Job Queue)
+1. **Image Selection**: User takes a picture or selects from gallery
+2. **Text Extraction**: User clicks "Extract Text from Picture"
+3. **Job Queuing**: System queues the extraction job and returns a message_id
+4. **Background Polling**: App polls job status every 10 seconds until completion
+5. **View Results**: Extracted text is displayed with copy icon
+6. **Copy Text**: User can copy text to clipboard with toast notification
+7. **Extract Another**: User can extract text from another image
 
 ## State Management
 
@@ -180,6 +188,7 @@ The app uses Redux with Redux Thunk for:
 - **Audio transcription state**: transcribedText, transcribing, error
 - **Theme state**: mode (light/dark/system), persisted with AsyncStorage
 - **API call management**: All API calls handled through thunk actions with automatic token refresh
+- **Job Queue Polling**: Automatic polling every 10 seconds for long-running jobs (PDF, audio, image extraction)
 - **Token refresh**: Automatic token refresh on 401 errors, logout on refresh failure
 - **Navigation guards**: Automatically redirects based on auth state
 
@@ -226,6 +235,7 @@ These permissions are configured in `app.json` and will be requested at runtime 
 - `expo-status-bar` - Status bar component
 - `@react-native-async-storage/async-storage` - Persistent storage for theme preferences
 - `react-native-paper` - Material Design 3 components with theme support
+- `react-native-markdown-display` - Markdown rendering for extracted text
 
 ### Development
 - `typescript` - TypeScript compiler
@@ -299,6 +309,7 @@ The project is fully typed with TypeScript. All components, actions, and reducer
 - **Components**: Reusable UI components
   - **AppHeader**: Consistent header with title, subtitle, theme toggle, and optional logout
   - **ImagePickerComponent**: Camera and gallery image selection
+  - **MarkdownRenderer**: Themed markdown display component for rich text rendering
   - **OpenaiPassModal**: Secure modal for OpenAI pass input with visibility toggle
   - **ThemeToggle**: Theme mode selector (light/dark/system)
 - **Screens**: Full-screen components for navigation (Home, PDF, Sound, Login, Register)
@@ -324,7 +335,16 @@ Theme preference is persisted using AsyncStorage and restored on app launch. Use
 - **Session Management**: PDF session persists until user uploads a fresh PDF or clears the session
 - **Model Selection**: Choose between OpenAI, Ollama, DeepSeek, and Gemini models for processing
 - **OpenAI Pass Security**: Secure modal for entering OpenAI pass with password visibility toggle
-- **Response Display**: Shows both extracted content and description from API responses
+- **Response Display**: Shows both extracted content (with markdown rendering) and description from API responses
+- **Markdown Support**: Extracted text is rendered with full markdown support (headings, lists, code blocks, tables, etc.)
+
+### Job Queue System
+The app implements a queue-based system for long-running operations:
+- **Queue Submission**: API calls return immediately with a `message_id`
+- **Status Polling**: App polls `/job/{message_id}` every 10 seconds
+- **Pending State**: Jobs with `status: "pending"` continue polling
+- **Completion**: Jobs return `content`, `description`, and `request_id` when complete
+- **Shared Helper**: `pollJobStatus` helper function used across image, PDF, and audio actions
 
 ### Authentication & Security
 - **Token Management**: Access tokens and refresh tokens stored in Redux state
@@ -332,4 +352,3 @@ Theme preference is persisted using AsyncStorage and restored on app launch. Use
 - **Session Expiration**: User is automatically logged out if token refresh fails
 - **Secure API Calls**: All API calls include authorization headers when authenticated
 - **OpenAI Pass Handling**: OpenAI pass is securely sent with requests when OpenAI model is selected
-
