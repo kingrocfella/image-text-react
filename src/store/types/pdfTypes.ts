@@ -4,6 +4,19 @@ export interface ExtractPdfTextResponse {
   request_id: string;
 }
 
+export interface QueuedJobResponse {
+  message: string;
+  message_id: string;
+  status: "queued" | "pending";
+}
+
+export interface JobStatusResponse {
+  status?: "pending";
+  content?: string;
+  description?: string;
+  request_id?: string;
+}
+
 export interface PdfState {
   extractedText: string | null;
   description: string | null;

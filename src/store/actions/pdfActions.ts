@@ -1,8 +1,71 @@
 import { ThunkAction } from "redux-thunk";
 import { RootState } from "../index";
-import { PdfActionTypes, ExtractPdfTextResponse } from "../types/pdfTypes";
+import {
+  PdfActionTypes,
+  ExtractPdfTextResponse,
+  QueuedJobResponse,
+  JobStatusResponse,
+} from "../types/pdfTypes";
 import { API_CONFIG } from "../../../config";
 import { apiCallWithRefresh } from "../../utils/apiClient";
+
+const POLLING_INTERVAL = 10000; // 10 seconds
+
+// Helper function to poll job status
+const pollJobStatus = async (
+  messageId: string,
+  dispatch: any,
+  getState: () => RootState,
+  accessToken: string | null,
+  tokenType: string | null
+): Promise<ExtractPdfTextResponse> => {
+  while (true) {
+    const response = await apiCallWithRefresh(
+      `${API_CONFIG.BASE_URL}/job/${messageId}`,
+      {
+        method: "GET",
+      },
+      dispatch,
+      getState,
+      accessToken,
+      tokenType
+    );
+
+    if (!response.ok) {
+      const errorData = await response
+        .json()
+        .catch(() => ({ message: "Failed to check job status" }));
+      throw new Error(
+        errorData.message || errorData.detail || "Failed to check job status"
+      );
+    }
+
+    const data: JobStatusResponse = await response.json();
+
+    // Check if job is still pending
+    if (data?.status === "pending") {
+      // Wait for polling interval before checking again
+      await new Promise((resolve) => setTimeout(resolve, POLLING_INTERVAL));
+      continue;
+    }
+
+    // Job is completed - response has content, description, request_id
+    if (
+      data?.content !== undefined &&
+      data?.description !== undefined &&
+      data?.request_id !== undefined
+    ) {
+      return {
+        content: data.content,
+        description: data.description,
+        request_id: data.request_id,
+      };
+    }
+
+    // Unexpected response format
+    throw new Error("Unexpected response format from job status API");
+  }
+};
 
 // Action Creators
 export const extractPdfTextRequest = (): PdfActionTypes => ({
@@ -91,7 +154,16 @@ export const extractPdfText = (
         );
       }
 
-      const data: ExtractPdfTextResponse = await response.json();
+      const queuedData: QueuedJobResponse = await response.json();
+
+      // Poll for job completion
+      const data = await pollJobStatus(
+        queuedData.message_id,
+        dispatch,
+        getState,
+        accessToken,
+        tokenType
+      );
 
       dispatch(
         extractPdfTextSuccess(data.content, data.description, data.request_id)
@@ -148,7 +220,16 @@ export const askPdfQuestion = (
         );
       }
 
-      const data: ExtractPdfTextResponse = await response.json();
+      const queuedData: QueuedJobResponse = await response.json();
+
+      // Poll for job completion
+      const data = await pollJobStatus(
+        queuedData.message_id,
+        dispatch,
+        getState,
+        accessToken,
+        tokenType
+      );
 
       dispatch(
         askPdfQuestionSuccess(data.content, data.description, data.request_id)

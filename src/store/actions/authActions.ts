@@ -100,7 +100,6 @@ export const login = (
     dispatch(loginRequest());
 
     try {
-      console.log(`${API_CONFIG.BASE_URL}/auth/login`);
       const response = await fetch(`${API_CONFIG.BASE_URL}/auth/login`, {
         method: "POST",
         headers: {

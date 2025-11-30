@@ -33,7 +33,21 @@ export const transcribeAudio = (
       const formData = new FormData();
       const filename = audioUri.split("/").pop() || "audio.m4a";
       const match = /\.(\w+)$/.exec(filename);
-      const type = match ? `audio/${match[1]}` : "audio/m4a";
+      const extension = match ? match[1].toLowerCase() : "m4a";
+
+      const mimeTypes: Record<string, string> = {
+        m4a: "audio/mp4",
+        mp4: "audio/mp4",
+        mp3: "audio/mpeg",
+        wav: "audio/wav",
+        webm: "audio/webm",
+        ogg: "audio/ogg",
+        aac: "audio/aac",
+        "3gp": "audio/3gpp",
+        flac: "audio/flac",
+      };
+
+      const type = mimeTypes[extension] || "audio/mp4";
       formData.append("file", {
         uri: audioUri,
         name: filename,
@@ -56,7 +70,7 @@ export const transcribeAudio = (
         const errorData = await response
           .json()
           .catch(() => ({ message: "Audio transcription failed" }));
-        console.log(errorData, '>>>>>>');
+
         throw new Error(
           errorData.message || errorData.detail || "Audio transcription failed"
         );

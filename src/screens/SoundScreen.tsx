@@ -12,24 +12,35 @@ import {
   ActivityIndicator,
 } from "react-native-paper";
 import Toast from "react-native-toast-message";
-import { useAudioRecorder, RecordingPresets, AudioModule } from "expo-audio";
+import {
+  useAudioRecorder,
+  useAudioRecorderState,
+  RecordingPresets,
+  AudioModule,
+} from "expo-audio";
 import { useAppDispatch, useAppSelector } from "../store";
-import { transcribeAudio, clearTranscribedText } from "../store/actions/audioActions";
+import {
+  transcribeAudio,
+  clearTranscribedText,
+} from "../store/actions/audioActions";
 import AppHeader from "../components/AppHeader";
 
 const SoundScreen: React.FC = () => {
   const dispatch = useAppDispatch();
   const theme = useTheme();
   const { accessToken, tokenType } = useAppSelector((state) => state.auth);
-  const { transcribedText, transcribing } = useAppSelector((state) => state.audio);
+  const { transcribedText, transcribing } = useAppSelector(
+    (state) => state.audio
+  );
   const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+  const recorderState = useAudioRecorderState(audioRecorder);
   const [audioUri, setAudioUri] = useState<string | null>(null);
   const [audioFileName, setAudioFileName] = useState<string | null>(null);
   const [recordingDuration, setRecordingDuration] = useState(0);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    if (audioRecorder.isRecording) {
+    if (recorderState.isRecording) {
       interval = setInterval(() => {
         setRecordingDuration((prev) => prev + 1);
       }, 1000);
@@ -37,12 +48,14 @@ const SoundScreen: React.FC = () => {
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [audioRecorder.isRecording]);
+  }, [recorderState.isRecording]);
 
   const formatDuration = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+    return `${mins.toString().padStart(2, "0")}:${secs
+      .toString()
+      .padStart(2, "0")}`;
   };
 
   const startRecording = async () => {
@@ -57,7 +70,7 @@ const SoundScreen: React.FC = () => {
       }
 
       await audioRecorder.prepareToRecordAsync();
-      audioRecorder.record();
+      await audioRecorder.record();
       setRecordingDuration(0);
     } catch (error) {
       Alert.alert("Error", "Failed to start recording");
@@ -151,7 +164,7 @@ const SoundScreen: React.FC = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {audioUri || audioRecorder.isRecording ? (
+        {audioUri || recorderState.isRecording ? (
           <View style={styles.previewContainer}>
             <Card
               style={[styles.audioCard, { backgroundColor: "#ffffff" }]}
@@ -160,7 +173,7 @@ const SoundScreen: React.FC = () => {
             >
               <View style={styles.audioContent}>
                 <IconButton
-                  icon={audioRecorder.isRecording ? "microphone" : "music-note"}
+                  icon={recorderState.isRecording ? "microphone" : "music-note"}
                   iconColor={theme.colors.tertiary}
                   size={64}
                   style={styles.audioIcon}
@@ -173,7 +186,11 @@ const SoundScreen: React.FC = () => {
                     marginBottom: 8,
                   }}
                 >
-                  {audioRecorder.isRecording ? "Recording..." : audioFileName ? "Audio File Selected" : "Recording Complete"}
+                  {recorderState.isRecording
+                    ? "Recording..."
+                    : audioFileName
+                    ? "Audio File Selected"
+                    : "Recording Complete"}
                 </Text>
                 {audioFileName ? (
                   <Text
@@ -202,7 +219,7 @@ const SoundScreen: React.FC = () => {
               </View>
             </Card>
 
-            {audioRecorder.isRecording ? (
+            {recorderState.isRecording ? (
               <Button
                 mode="contained"
                 icon="stop"
@@ -268,7 +285,10 @@ const SoundScreen: React.FC = () => {
                   <View style={styles.textHeader}>
                     <Text
                       variant="titleMedium"
-                      style={{ color: theme.colors.tertiary, fontWeight: "600" }}
+                      style={{
+                        color: theme.colors.tertiary,
+                        fontWeight: "600",
+                      }}
                     >
                       Transcribed Text:
                     </Text>
@@ -351,7 +371,10 @@ const SoundScreen: React.FC = () => {
                     mode="outlined"
                     icon="file-music"
                     onPress={handlePickAudioFile}
-                    style={[styles.uploadButton, { backgroundColor: theme.colors.background }]}
+                    style={[
+                      styles.uploadButton,
+                      { backgroundColor: theme.colors.background },
+                    ]}
                     contentStyle={styles.buttonContent}
                     testID="upload-audio-button"
                   >
