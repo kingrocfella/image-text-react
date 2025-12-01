@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   StyleSheet,
@@ -6,18 +6,17 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-} from 'react-native';
+  Linking,
+} from "react-native";
+import { Text, TextInput, Button, Surface, useTheme } from "react-native-paper";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useAppDispatch, useAppSelector } from "../store";
+import { register } from "../store/actions/authActions";
 import {
-  Text,
-  TextInput,
-  Button,
-  Surface,
-  useTheme,
-} from 'react-native-paper';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useAppDispatch, useAppSelector } from '../store';
-import { register } from '../store/actions/authActions';
-import { getEmailError, getPasswordError, getNameError } from '../utils/validation';
+  getEmailError,
+  getPasswordError,
+  getNameError,
+} from "../utils/validation";
 
 type RootStackParamList = {
   Login: undefined;
@@ -25,7 +24,10 @@ type RootStackParamList = {
   Home: undefined;
 };
 
-type RegisterScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Register'>;
+type RegisterScreenNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "Register"
+>;
 
 interface Props {
   navigation: RegisterScreenNavigationProp;
@@ -36,9 +38,9 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
   const { loading } = useAppSelector((state) => state.auth);
   const theme = useTheme();
 
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [nameError, setNameError] = useState<string | null>(null);
   const [emailError, setEmailError] = useState<string | null>(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
@@ -63,20 +65,23 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
 
     try {
       const message = await dispatch(register({ name, email, password }));
-      Alert.alert('Registration Successful', message, [
+      Alert.alert("Registration Successful", message, [
         {
-          text: 'LOGIN',
-          onPress: () => navigation.navigate('Login'),
+          text: "LOGIN",
+          onPress: () => navigation.navigate("Login"),
         },
       ]);
     } catch (error) {
-      Alert.alert('Registration Failed', error instanceof Error ? error.message : 'An error occurred');
+      Alert.alert(
+        "Registration Failed",
+        error instanceof Error ? error.message : "An error occurred"
+      );
     }
   };
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
       <ScrollView
@@ -84,12 +89,21 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.content}>
-          <Surface style={[styles.card, { backgroundColor: theme.colors.surface }]} elevation={2}>
+          <Surface
+            style={[styles.card, { backgroundColor: theme.colors.surface }]}
+            elevation={2}
+          >
             <View style={styles.header}>
-              <Text variant="displaySmall" style={[styles.title, { color: theme.colors.primary }]}>
+              <Text
+                variant="displaySmall"
+                style={[styles.title, { color: theme.colors.primary }]}
+              >
                 Create Account
               </Text>
-              <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant }}>
+              <Text
+                variant="bodyLarge"
+                style={{ color: theme.colors.onSurfaceVariant }}
+              >
                 Sign up to get started
               </Text>
             </View>
@@ -110,7 +124,10 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
                 testID="name-input"
               />
               {nameError && (
-                <Text variant="labelSmall" style={[styles.errorText, { color: theme.colors.error }]}>
+                <Text
+                  variant="labelSmall"
+                  style={[styles.errorText, { color: theme.colors.error }]}
+                >
                   {nameError}
                 </Text>
               )}
@@ -132,7 +149,10 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
                 testID="email-input"
               />
               {emailError && (
-                <Text variant="labelSmall" style={[styles.errorText, { color: theme.colors.error }]}>
+                <Text
+                  variant="labelSmall"
+                  style={[styles.errorText, { color: theme.colors.error }]}
+                >
                   {emailError}
                 </Text>
               )}
@@ -151,7 +171,7 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
                 left={<TextInput.Icon icon="lock" />}
                 right={
                   <TextInput.Icon
-                    icon={showPassword ? 'eye-off' : 'eye'}
+                    icon={showPassword ? "eye-off" : "eye"}
                     onPress={() => setShowPassword(!showPassword)}
                   />
                 }
@@ -159,7 +179,10 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
                 testID="password-input"
               />
               {passwordError && (
-                <Text variant="labelSmall" style={[styles.errorText, { color: theme.colors.error }]}>
+                <Text
+                  variant="labelSmall"
+                  style={[styles.errorText, { color: theme.colors.error }]}
+                >
                   {passwordError}
                 </Text>
               )}
@@ -178,11 +201,24 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
 
               <Button
                 mode="text"
-                onPress={() => navigation.navigate('Login')}
+                onPress={() => navigation.navigate("Login")}
                 style={styles.linkButton}
                 testID="login-link"
               >
-                Already have an account? <Text style={{ fontWeight: 'bold' }}>Login</Text>
+                Already have an account?{" "}
+                <Text style={{ fontWeight: "bold" }}>Login</Text>
+              </Button>
+
+              <Button
+                mode="text"
+                onPress={() =>
+                  Linking.openURL("https://kingsleyabia.dev/scangenai/policy")
+                }
+                style={styles.privacyButton}
+                icon="shield-check"
+                testID="privacy-policy-link"
+              >
+                Privacy Policy
               </Button>
             </View>
           </Surface>
@@ -201,7 +237,7 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
     padding: 20,
   },
   card: {
@@ -210,15 +246,15 @@ const styles = StyleSheet.create({
   },
   header: {
     marginBottom: 32,
-    alignItems: 'center',
+    alignItems: "center",
   },
   title: {
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 8,
-    textAlign: 'center',
+    textAlign: "center",
   },
   form: {
-    width: '100%',
+    width: "100%",
   },
   input: {
     marginBottom: 8,
@@ -237,6 +273,9 @@ const styles = StyleSheet.create({
   },
   linkButton: {
     marginTop: 16,
+  },
+  privacyButton: {
+    marginTop: 8,
   },
 });
 

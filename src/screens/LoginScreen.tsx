@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   StyleSheet,
@@ -6,7 +6,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-} from 'react-native';
+  Linking,
+} from "react-native";
 import {
   Text,
   TextInput,
@@ -14,11 +15,11 @@ import {
   Card,
   Surface,
   useTheme,
-} from 'react-native-paper';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useAppDispatch, useAppSelector } from '../store';
-import { login } from '../store/actions/authActions';
-import { getEmailError, getPasswordError } from '../utils/validation';
+} from "react-native-paper";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useAppDispatch, useAppSelector } from "../store";
+import { login } from "../store/actions/authActions";
+import { getEmailError, getPasswordError } from "../utils/validation";
 
 type RootStackParamList = {
   Login: undefined;
@@ -26,7 +27,10 @@ type RootStackParamList = {
   Home: undefined;
 };
 
-type LoginScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Login'>;
+type LoginScreenNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "Login"
+>;
 
 interface Props {
   navigation: LoginScreenNavigationProp;
@@ -37,8 +41,8 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const { loading } = useAppSelector((state) => state.auth);
   const theme = useTheme();
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [emailError, setEmailError] = useState<string | null>(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
@@ -61,13 +65,16 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
     try {
       await dispatch(login({ email, password }));
     } catch (error) {
-      Alert.alert('Login Failed', error instanceof Error ? error.message : 'An error occurred');
+      Alert.alert(
+        "Login Failed",
+        error instanceof Error ? error.message : "An error occurred"
+      );
     }
   };
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
       <ScrollView
@@ -75,12 +82,21 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.content}>
-          <Surface style={[styles.card, { backgroundColor: theme.colors.surface }]} elevation={2}>
+          <Surface
+            style={[styles.card, { backgroundColor: theme.colors.surface }]}
+            elevation={2}
+          >
             <View style={styles.header}>
-              <Text variant="displaySmall" style={[styles.title, { color: theme.colors.primary }]}>
+              <Text
+                variant="displaySmall"
+                style={[styles.title, { color: theme.colors.primary }]}
+              >
                 Welcome Back
               </Text>
-              <Text variant="bodyLarge" style={{ color: theme.colors.onSurfaceVariant }}>
+              <Text
+                variant="bodyLarge"
+                style={{ color: theme.colors.onSurfaceVariant }}
+              >
                 Sign in to continue
               </Text>
             </View>
@@ -103,7 +119,10 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
                 testID="email-input"
               />
               {emailError && (
-                <Text variant="labelSmall" style={[styles.errorText, { color: theme.colors.error }]}>
+                <Text
+                  variant="labelSmall"
+                  style={[styles.errorText, { color: theme.colors.error }]}
+                >
                   {emailError}
                 </Text>
               )}
@@ -122,7 +141,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
                 left={<TextInput.Icon icon="lock" />}
                 right={
                   <TextInput.Icon
-                    icon={showPassword ? 'eye-off' : 'eye'}
+                    icon={showPassword ? "eye-off" : "eye"}
                     onPress={() => setShowPassword(!showPassword)}
                   />
                 }
@@ -130,7 +149,10 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
                 testID="password-input"
               />
               {passwordError && (
-                <Text variant="labelSmall" style={[styles.errorText, { color: theme.colors.error }]}>
+                <Text
+                  variant="labelSmall"
+                  style={[styles.errorText, { color: theme.colors.error }]}
+                >
                   {passwordError}
                 </Text>
               )}
@@ -149,11 +171,24 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
               <Button
                 mode="text"
-                onPress={() => navigation.navigate('Register')}
+                onPress={() => navigation.navigate("Register")}
                 style={styles.linkButton}
                 testID="register-link"
               >
-                Don't have an account? <Text style={{ fontWeight: 'bold' }}>Register</Text>
+                Don't have an account?{" "}
+                <Text style={{ fontWeight: "bold" }}>Register</Text>
+              </Button>
+
+              <Button
+                mode="text"
+                onPress={() =>
+                  Linking.openURL("https://kingsleyabia.dev/scangenai/policy")
+                }
+                style={styles.privacyButton}
+                icon="shield-check"
+                testID="privacy-policy-link"
+              >
+                Privacy Policy
               </Button>
             </View>
           </Surface>
@@ -172,7 +207,7 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
     padding: 20,
   },
   card: {
@@ -181,15 +216,15 @@ const styles = StyleSheet.create({
   },
   header: {
     marginBottom: 32,
-    alignItems: 'center',
+    alignItems: "center",
   },
   title: {
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 8,
-    textAlign: 'center',
+    textAlign: "center",
   },
   form: {
-    width: '100%',
+    width: "100%",
   },
   input: {
     marginBottom: 8,
@@ -208,6 +243,9 @@ const styles = StyleSheet.create({
   },
   linkButton: {
     marginTop: 16,
+  },
+  privacyButton: {
+    marginTop: 8,
   },
 });
 
