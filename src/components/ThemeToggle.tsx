@@ -2,8 +2,7 @@ import React from "react";
 import { View, StyleSheet } from "react-native";
 import { Switch, useTheme, Menu, IconButton } from "react-native-paper";
 import { useAppDispatch, useAppSelector } from "../store";
-import { setThemeModePersisted } from "../store/actions/themeActions";
-import { ThemeMode } from "../store/types/themeTypes";
+import { setThemeModePersisted, ThemeMode } from "../store/slices/themeSlice";
 
 const ThemeToggle: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -56,8 +55,8 @@ const ThemeToggle: React.FC = () => {
                 isSystemMode
                   ? "theme-light-dark"
                   : isDarkMode
-                  ? "weather-night"
-                  : "weather-sunny"
+                    ? "weather-night"
+                    : "weather-sunny"
               }
               iconColor={theme.colors.onSurface}
               size={20}

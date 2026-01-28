@@ -2,24 +2,23 @@ import React from "react";
 import { render, fireEvent, act, waitFor } from "@testing-library/react-native";
 import { Alert } from "react-native";
 import SoundScreen from "../SoundScreen";
-import { useAppDispatch, useAppSelector } from "../../store";
-import {
-  transcribeAudio,
-  clearTranscribedText,
-} from "../../store/actions/audioActions";
+import { useAudioTranscription } from "../../hooks";
 import * as Clipboard from "expo-clipboard";
 import * as DocumentPicker from "expo-document-picker";
 import Toast from "react-native-toast-message";
 import { AudioModule } from "expo-audio";
 
-jest.mock("../../store", () => ({
-  useAppDispatch: jest.fn(),
-  useAppSelector: jest.fn(),
-}));
+jest.mock("../../components/ThemeToggle", () => {
+  const React = require("react");
+  const { View } = require("react-native");
+  return () => <View testID="theme-toggle" />;
+});
 
-jest.mock("../../store/actions/audioActions", () => ({
-  transcribeAudio: jest.fn(),
-  clearTranscribedText: jest.fn(() => ({ type: "CLEAR_TRANSCRIBED_TEXT" })),
+const mockMutate = jest.fn();
+const mockReset = jest.fn();
+
+jest.mock("../../hooks", () => ({
+  useAudioTranscription: jest.fn(),
 }));
 
 jest.mock("expo-clipboard", () => ({
@@ -67,16 +66,12 @@ jest.mock("expo-audio", () => ({
   },
   AudioModule: {
     requestRecordingPermissionsAsync: jest.fn(() =>
-      Promise.resolve({ granted: true })
+      Promise.resolve({ granted: true }),
     ),
   },
 }));
 
-const mockDispatch = jest.fn();
-const mockUseAppDispatch = useAppDispatch as jest.Mock;
-const mockUseAppSelector = useAppSelector as jest.Mock;
-const mockTranscribeAudio = transcribeAudio as jest.Mock;
-const mockClearTranscribedText = clearTranscribedText as jest.Mock;
+const mockUseAudioTranscription = useAudioTranscription as jest.Mock;
 const mockClipboardSet = Clipboard.setStringAsync as jest.Mock;
 const mockDocumentPicker = DocumentPicker.getDocumentAsync as jest.Mock;
 const mockToastShow = (Toast as unknown as { show: jest.Mock }).show;
@@ -85,45 +80,21 @@ const mockRequestPermissions =
 
 let alertSpy: jest.SpyInstance;
 
-const createState = (
-  overrides?: Partial<{ auth: any; audio: any; theme: any }>
-) => ({
-  auth: {
-    user: { id: "1", name: "John Doe", email: "john@example.com" },
-    accessToken: "mock-access-token",
-    refreshToken: "mock-refresh-token",
-    tokenType: "Bearer",
-    isAuthenticated: true,
-    loading: false,
-    error: null,
-    ...(overrides?.auth || {}),
-  },
-  audio: {
-    transcribedText: null,
-    transcribing: false,
-    error: null,
-    ...(overrides?.audio || {}),
-  },
-  theme: {
-    mode: "system",
-    ...(overrides?.theme || {}),
-  },
-});
-
-let currentState = createState();
+let mockMutationState = {
+  data: undefined as string | undefined,
+  isPending: false,
+};
 
 beforeEach(() => {
-  currentState = createState();
-  mockDispatch.mockReset();
-  mockDispatch.mockImplementation(() => Promise.resolve());
-  mockUseAppDispatch.mockReturnValue(mockDispatch);
-  mockUseAppSelector.mockImplementation((selector: (state: any) => any) =>
-    selector(currentState)
-  );
-  mockTranscribeAudio.mockReset();
-  mockTranscribeAudio.mockImplementation(() => jest.fn());
-  mockClearTranscribedText.mockClear();
-  mockClearTranscribedText.mockReturnValue({ type: "CLEAR_TRANSCRIBED_TEXT" });
+  mockMutationState = { data: undefined, isPending: false };
+  mockMutate.mockClear();
+  mockReset.mockClear();
+  mockUseAudioTranscription.mockReturnValue({
+    mutate: mockMutate,
+    data: mockMutationState.data,
+    isPending: mockMutationState.isPending,
+    reset: mockReset,
+  });
   mockClipboardSet.mockClear();
   mockDocumentPicker.mockClear();
   mockToastShow.mockClear();
@@ -146,9 +117,7 @@ const renderSoundScreen = () => render(<SoundScreen />);
 describe("SoundScreen", () => {
   it("renders the app title", () => {
     const { getByTestId } = renderSoundScreen();
-    expect(getByTestId("app-header-title").props.children).toBe(
-      "Audio to Text"
-    );
+    expect(getByTestId("app-header-title").props.children).toBe("Audio to Text");
   });
 
   it("renders welcome screen with record and upload buttons", () => {
@@ -179,7 +148,7 @@ describe("SoundScreen", () => {
 
     expect(alertSpy).toHaveBeenCalledWith(
       "Permission Required",
-      "Please grant microphone permission to record audio."
+      "Please grant microphone permission to record audio.",
     );
     expect(mockAudioRecorder.record).not.toHaveBeenCalled();
   });
@@ -216,19 +185,16 @@ describe("SoundScreen", () => {
 
     await waitFor(() => {
       expect(getByTestId("audio-file-name").props.children).toBe(
-        "test-audio.m4a"
+        "test-audio.m4a",
       );
     });
   });
 
-  it("dispatches transcribeAudio when transcribe button is pressed", async () => {
+  it("calls mutate when transcribe button is pressed", async () => {
     mockDocumentPicker.mockResolvedValueOnce({
       canceled: false,
       assets: [{ uri: "mock-audio-uri", name: "test-audio.m4a" }],
     });
-
-    const transcribeThunk = jest.fn();
-    mockTranscribeAudio.mockReturnValue(transcribeThunk);
 
     const { getByTestId } = renderSoundScreen();
 
@@ -242,24 +208,24 @@ describe("SoundScreen", () => {
       fireEvent.press(getByTestId("transcribe-button"));
     });
 
-    expect(mockTranscribeAudio).toHaveBeenCalledWith(
+    expect(mockMutate).toHaveBeenCalledWith(
       "mock-audio-uri",
-      "mock-access-token",
-      "Bearer"
+      expect.any(Object),
     );
-    expect(mockDispatch).toHaveBeenCalledWith(transcribeThunk);
   });
 
-  it("shows loader when transcribing is true", async () => {
+  it("shows loader when isPending is true", async () => {
     mockDocumentPicker.mockResolvedValueOnce({
       canceled: false,
       assets: [{ uri: "mock-audio-uri", name: "test-audio.m4a" }],
     });
 
-    currentState = createState({ audio: { transcribing: true } });
-    mockUseAppSelector.mockImplementation((selector: (state: any) => any) =>
-      selector(currentState)
-    );
+    mockUseAudioTranscription.mockReturnValue({
+      mutate: mockMutate,
+      data: undefined,
+      isPending: true,
+      reset: mockReset,
+    });
 
     const { getByTestId } = renderSoundScreen();
 
@@ -276,12 +242,12 @@ describe("SoundScreen", () => {
       assets: [{ uri: "mock-audio-uri", name: "test-audio.m4a" }],
     });
 
-    currentState = createState({
-      audio: { transcribedText: "Hello from audio" },
+    mockUseAudioTranscription.mockReturnValue({
+      mutate: mockMutate,
+      data: "Hello from audio",
+      isPending: false,
+      reset: mockReset,
     });
-    mockUseAppSelector.mockImplementation((selector: (state: any) => any) =>
-      selector(currentState)
-    );
 
     const { getByTestId } = renderSoundScreen();
 
@@ -290,7 +256,7 @@ describe("SoundScreen", () => {
     });
 
     expect(getByTestId("transcribed-text").props.children).toBe(
-      "Hello from audio"
+      "Hello from audio",
     );
   });
 
@@ -300,12 +266,12 @@ describe("SoundScreen", () => {
       assets: [{ uri: "mock-audio-uri", name: "test-audio.m4a" }],
     });
 
-    currentState = createState({
-      audio: { transcribedText: "Copied Audio Text" },
+    mockUseAudioTranscription.mockReturnValue({
+      mutate: mockMutate,
+      data: "Copied Audio Text",
+      isPending: false,
+      reset: mockReset,
     });
-    mockUseAppSelector.mockImplementation((selector: (state: any) => any) =>
-      selector(currentState)
-    );
 
     const { getByTestId } = renderSoundScreen();
 
@@ -322,20 +288,22 @@ describe("SoundScreen", () => {
       expect.objectContaining({
         type: "success",
         text1: "Text copied to clipboard",
-      })
+      }),
     );
   });
 
-  it("clears audio and text when transcribe another button is pressed", async () => {
+  it("resets state when transcribe another button is pressed", async () => {
     mockDocumentPicker.mockResolvedValueOnce({
       canceled: false,
       assets: [{ uri: "mock-audio-uri", name: "test-audio.m4a" }],
     });
 
-    currentState = createState({ audio: { transcribedText: "Some text" } });
-    mockUseAppSelector.mockImplementation((selector: (state: any) => any) =>
-      selector(currentState)
-    );
+    mockUseAudioTranscription.mockReturnValue({
+      mutate: mockMutate,
+      data: "Some text",
+      isPending: false,
+      reset: mockReset,
+    });
 
     const { getByTestId } = renderSoundScreen();
 
@@ -347,9 +315,6 @@ describe("SoundScreen", () => {
       fireEvent.press(getByTestId("transcribe-another-button"));
     });
 
-    expect(mockClearTranscribedText).toHaveBeenCalledTimes(2);
-    expect(mockDispatch).toHaveBeenCalledWith({
-      type: "CLEAR_TRANSCRIBED_TEXT",
-    });
+    expect(mockReset).toHaveBeenCalled();
   });
 });

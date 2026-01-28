@@ -18,7 +18,7 @@ import {
 } from "react-native-paper";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useAppDispatch, useAppSelector } from "../store";
-import { login } from "../store/actions/authActions";
+import { login } from "../store/slices/authSlice";
 import { getEmailError, getPasswordError } from "../utils/validation";
 
 type RootStackParamList = {
@@ -62,13 +62,9 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
       return;
     }
 
-    try {
-      await dispatch(login({ email, password }));
-    } catch (error) {
-      Alert.alert(
-        "Login Failed",
-        error instanceof Error ? error.message : "An error occurred"
-      );
+    const result = await dispatch(login({ email, password }));
+    if (login.rejected.match(result)) {
+      Alert.alert("Login Failed", result.payload || "An error occurred");
     }
   };
 

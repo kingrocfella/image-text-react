@@ -19,7 +19,7 @@ A React Native app built with Expo that allows users to extract text from images
 - 🔄 **Extract Another**: Quick workflow to extract text from multiple images/PDFs/audio files
 - 🌓 **Theme Toggle**: Switch between Light, Dark, and System theme modes
 - 💾 **Theme Persistence**: Theme preference saved and restored on app launch
-- 🗂️ **State Management**: Redux with Redux Thunk for API calls
+- 🗂️ **State Management**: Redux Toolkit with createSlice and createAsyncThunk for type-safe, modern state management
 - 🧭 **Navigation**: React Navigation with authentication guards
 - 🔒 **Permissions**: Proper permission handling for camera, photo library, microphone, and document access
 - 🎨 **Toast Notifications**: Non-intrusive feedback for user actions
@@ -98,30 +98,14 @@ npm start
 │   │   └── RegisterScreen.tsx
 │   ├── store/
 │   │   ├── actions/
-│   │   │   ├── __tests__/
-│   │   │   │   └── authActions.test.ts
-│   │   │   ├── helpers/
-│   │   │   │   └── pollJobStatus.ts  # Job polling helper for queue-based APIs
-│   │   │   ├── authActions.ts
-│   │   │   ├── imageActions.ts   # Image extraction with job polling
-│   │   │   ├── pdfActions.ts     # PDF extraction and Q&A with job polling
-│   │   │   ├── audioActions.ts   # Audio transcription with job polling
-│   │   │   └── themeActions.ts   # Theme management actions
-│   │   ├── reducers/
-│   │   │   ├── __tests__/
-│   │   │   │   └── authReducer.test.ts
-│   │   │   ├── authReducer.ts
-│   │   │   ├── imageReducer.ts
-│   │   │   ├── pdfReducer.ts      # PDF state management
-│   │   │   ├── audioReducer.ts    # Audio state management
-│   │   │   ├── themeReducer.ts   # Theme state management
-│   │   │   └── index.ts
-│   │   ├── types/
-│   │   │   ├── authTypes.ts
-│   │   │   ├── imageTypes.ts
-│   │   │   ├── pdfTypes.ts       # PDF-related types
-│   │   │   ├── audioTypes.ts     # Audio-related types
-│   │   │   └── themeTypes.ts     # Theme-related types
+│   │   │   └── helpers/
+│   │   │       └── pollJobStatus.ts  # Job polling helper for queue-based APIs
+│   │   ├── slices/               # Redux Toolkit slices (createSlice + createAsyncThunk)
+│   │   │   ├── authSlice.ts      # Authentication state & async thunks
+│   │   │   ├── imageSlice.ts     # Image extraction state & async thunks
+│   │   │   ├── pdfSlice.ts       # PDF extraction and Q&A state & async thunks
+│   │   │   ├── audioSlice.ts     # Audio transcription state & async thunks
+│   │   │   └── themeSlice.ts     # Theme management state & async thunks
 │   │   └── index.ts              # Redux store configuration and typed hooks
 │   ├── types/                    # Additional shared types (placeholder)
 │   └── utils/
@@ -181,16 +165,24 @@ npm start
 
 ## State Management
 
-The app uses Redux with Redux Thunk for:
-- **Authentication state**: user, tokens (accessToken, refreshToken), isAuthenticated, loading, error
-- **Image extraction state**: extractedText, extracting, error
-- **PDF extraction state**: extractedText, description, requestId, extracting, error
-- **Audio transcription state**: transcribedText, transcribing, error
-- **Theme state**: mode (light/dark/system), persisted with AsyncStorage
-- **API call management**: All API calls handled through thunk actions with automatic token refresh
+The app uses **Redux Toolkit (RTK)** with `createSlice` and `createAsyncThunk` for modern, type-safe state management:
+
+### Architecture
+- **Slices**: Each feature has its own slice (`authSlice`, `imageSlice`, `pdfSlice`, `audioSlice`, `themeSlice`) that combines state, reducers, and async thunks in a single file
+- **createAsyncThunk**: All async operations (API calls) use `createAsyncThunk` for automatic pending/fulfilled/rejected action dispatching
+- **Type Safety**: Full TypeScript support with inferred action types and typed hooks (`useAppDispatch`, `useAppSelector`)
+
+### State Slices
+- **authSlice**: user, tokens (accessToken, refreshToken), isAuthenticated, loading, error
+- **imageSlice**: extractedText, extracting, error
+- **pdfSlice**: extractedText, description, requestId, extracting, error
+- **audioSlice**: transcribedText, transcribing, error
+- **themeSlice**: mode (light/dark/system), persisted with AsyncStorage
+
+### Features
+- **Automatic Token Refresh**: API client automatically refreshes tokens on 401 errors using the `refreshToken` async thunk
 - **Job Queue Polling**: Automatic polling every 10 seconds for long-running jobs (PDF, audio, image extraction)
-- **Token refresh**: Automatic token refresh on 401 errors, logout on refresh failure
-- **Navigation guards**: Automatically redirects based on auth state
+- **Navigation Guards**: Automatically redirects based on authentication state
 
 ## Navigation Flow
 
@@ -221,10 +213,8 @@ These permissions are configured in `app.json` and will be requested at runtime 
 - `react-native-safe-area-context` - Safe area handling
 
 ### State Management
-- `@reduxjs/toolkit` - Redux Toolkit
+- `@reduxjs/toolkit` - Redux Toolkit (includes Redux core and Thunk middleware)
 - `react-redux` - React bindings for Redux
-- `redux` - State management
-- `redux-thunk` - Async action middleware
 
 ### Features
 - `expo-image-picker` - Camera and gallery access
@@ -258,11 +248,8 @@ npm run test
 ### Test Coverage
 
 - **Screens**: HomeScreen, PdfScreen, SoundScreen, LoginScreen, RegisterScreen
-- **Reducers**: authReducer (including refresh token actions)
-- **Actions**: authActions (including refresh token functionality)
-- **Utilities**: apiClient (automatic token refresh on 401 errors)
 
-**Test Results**: 79 tests passing across 8 test suites
+**Test Results**: 48 tests passing across 5 test suites
 
 Run individual suites with:
 
@@ -272,9 +259,6 @@ npx jest src/screens/__tests__/PdfScreen.test.tsx
 npx jest src/screens/__tests__/SoundScreen.test.tsx
 npx jest src/screens/__tests__/LoginScreen.test.tsx
 npx jest src/screens/__tests__/RegisterScreen.test.tsx
-npx jest src/store/reducers/__tests__/authReducer.test.ts
-npx jest src/store/actions/__tests__/authActions.test.ts
-npx jest src/utils/__tests__/apiClient.test.ts
 ```
 
 The Jest configuration is located in `jest.config.js` and is preconfigured for Expo SDK 54. Tests include mocks for AsyncStorage, SafeAreaContext, expo-audio, and icon libraries.
@@ -293,17 +277,17 @@ Set any required environment variables in your shell or CI before running the bu
 
 - **Framework**: React Native with Expo SDK 54
 - **Language**: TypeScript
-- **State Management**: Redux + Redux Thunk
+- **State Management**: Redux Toolkit with createSlice and createAsyncThunk
 - **Navigation**: React Navigation v6
 - **UI Components**: React Native Paper (Material Design 3) with theme support
-- **API Communication**: Fetch API with FormData support
+- **API Communication**: Fetch API with FormData support and automatic token refresh
 - **Storage**: AsyncStorage for persistent theme preferences
 - **Theme System**: Custom light/dark themes with system preference support
 
 ## Development
 
 ### TypeScript
-The project is fully typed with TypeScript. All components, actions, and reducers are typed for better development experience and error prevention.
+The project is fully typed with TypeScript. All components, slices, and utilities are typed for better development experience and error prevention. RTK's `createSlice` and `createAsyncThunk` provide automatic type inference for actions and state.
 
 ### Code Structure
 - **Components**: Reusable UI components

@@ -11,7 +11,7 @@ import {
 import { Text, TextInput, Button, Surface, useTheme } from "react-native-paper";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useAppDispatch, useAppSelector } from "../store";
-import { register } from "../store/actions/authActions";
+import { register } from "../store/slices/authSlice";
 import {
   getEmailError,
   getPasswordError,
@@ -63,19 +63,16 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
       return;
     }
 
-    try {
-      const message = await dispatch(register({ name, email, password }));
-      Alert.alert("Registration Successful", message, [
+    const result = await dispatch(register({ name, email, password }));
+    if (register.fulfilled.match(result)) {
+      Alert.alert("Registration Successful", result.payload, [
         {
           text: "LOGIN",
           onPress: () => navigation.navigate("Login"),
         },
       ]);
-    } catch (error) {
-      Alert.alert(
-        "Registration Failed",
-        error instanceof Error ? error.message : "An error occurred"
-      );
+    } else if (register.rejected.match(result)) {
+      Alert.alert("Registration Failed", result.payload || "An error occurred");
     }
   };
 

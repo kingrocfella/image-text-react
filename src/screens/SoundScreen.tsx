@@ -18,25 +18,23 @@ import {
   RecordingPresets,
   AudioModule,
 } from "expo-audio";
-import { useAppDispatch, useAppSelector } from "../store";
-import {
-  transcribeAudio,
-  clearTranscribedText,
-} from "../store/actions/audioActions";
+import { useAudioTranscription } from "../hooks";
 import AppHeader from "../components/AppHeader";
 
 const SoundScreen: React.FC = () => {
-  const dispatch = useAppDispatch();
   const theme = useTheme();
-  const { accessToken, tokenType } = useAppSelector((state) => state.auth);
-  const { transcribedText, transcribing } = useAppSelector(
-    (state) => state.audio
-  );
   const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const recorderState = useAudioRecorderState(audioRecorder);
   const [audioUri, setAudioUri] = useState<string | null>(null);
   const [audioFileName, setAudioFileName] = useState<string | null>(null);
   const [recordingDuration, setRecordingDuration] = useState(0);
+
+  const {
+    mutate: transcribe,
+    data: transcribedText,
+    isPending: transcribing,
+    reset: clearTranscribedText,
+  } = useAudioTranscription();
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -64,7 +62,7 @@ const SoundScreen: React.FC = () => {
       if (!permission.granted) {
         Alert.alert(
           "Permission Required",
-          "Please grant microphone permission to record audio."
+          "Please grant microphone permission to record audio.",
         );
         return;
       }
@@ -103,27 +101,27 @@ const SoundScreen: React.FC = () => {
         setAudioUri(asset.uri);
         setAudioFileName(asset.name || "audio.m4a");
         setRecordingDuration(0);
-        dispatch(clearTranscribedText());
+        clearTranscribedText();
       }
     } catch (error) {
       Alert.alert("Error", "Failed to pick audio file");
     }
   };
 
-  const handleTranscribeAudio = async () => {
+  const handleTranscribeAudio = () => {
     if (!audioUri) {
       Alert.alert("No Recording", "Please record audio first.");
       return;
     }
 
-    try {
-      await dispatch(transcribeAudio(audioUri, accessToken, tokenType));
-    } catch (error) {
-      Alert.alert(
-        "Transcription Failed",
-        error instanceof Error ? error.message : "An error occurred"
-      );
-    }
+    transcribe(audioUri, {
+      onError: (error) => {
+        Alert.alert(
+          "Transcription Failed",
+          error instanceof Error ? error.message : "An error occurred",
+        );
+      },
+    });
   };
 
   const handleCopyText = async () => {
@@ -151,7 +149,7 @@ const SoundScreen: React.FC = () => {
     setAudioUri(null);
     setAudioFileName(null);
     setRecordingDuration(0);
-    dispatch(clearTranscribedText());
+    clearTranscribedText();
   };
 
   return (
@@ -189,8 +187,8 @@ const SoundScreen: React.FC = () => {
                   {recorderState.isRecording
                     ? "Recording..."
                     : audioFileName
-                    ? "Audio File Selected"
-                    : "Recording Complete"}
+                      ? "Audio File Selected"
+                      : "Recording Complete"}
                 </Text>
                 {audioFileName ? (
                   <Text

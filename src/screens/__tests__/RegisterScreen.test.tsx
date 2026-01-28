@@ -3,15 +3,18 @@ import { render, fireEvent, act } from '@testing-library/react-native';
 import { Alert } from 'react-native';
 import RegisterScreen from '../RegisterScreen';
 import { useAppDispatch, useAppSelector } from '../../store';
-import { register } from '../../store/actions/authActions';
+import { register } from '../../store/slices/authSlice';
 
 jest.mock('../../store', () => ({
   useAppDispatch: jest.fn(),
   useAppSelector: jest.fn(),
 }));
 
-jest.mock('../../store/actions/authActions', () => ({
-  register: jest.fn(),
+jest.mock('../../store/slices/authSlice', () => ({
+  register: Object.assign(jest.fn(), {
+    fulfilled: { match: jest.fn(() => false) },
+    rejected: { match: jest.fn(() => false) },
+  }),
 }));
 
 jest.mock('react-native-paper', () => {
@@ -64,7 +67,7 @@ jest.mock('react-native-paper', () => {
 const mockDispatch = jest.fn();
 const mockUseAppDispatch = useAppDispatch as jest.Mock;
 const mockUseAppSelector = useAppSelector as jest.Mock;
-const mockRegister = register as jest.Mock;
+const mockRegister = register as unknown as jest.Mock;
 
 const createState = (overrides?: Partial<{ auth: any }>) => ({
   auth: {

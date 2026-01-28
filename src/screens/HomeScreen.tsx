@@ -12,39 +12,43 @@ import {
 } from "react-native-paper";
 import Toast from "react-native-toast-message";
 import { useAppDispatch, useAppSelector } from "../store";
-import { logout } from "../store/actions/authActions";
-import { extractText, clearExtractedText } from "../store/actions/imageActions";
+import { logout } from "../store/slices/authSlice";
+import { useImageExtraction } from "../hooks";
 import ImagePickerComponent from "../components/ImagePickerComponent";
 import AppHeader from "../components/AppHeader";
 
 const HomeScreen: React.FC = () => {
   const dispatch = useAppDispatch();
   const theme = useTheme();
-  const { user, accessToken, tokenType } = useAppSelector(
-    (state) => state.auth
-  );
-  const { extractedText, extracting } = useAppSelector((state) => state.image);
+  const { user } = useAppSelector((state) => state.auth);
   const [image, setImage] = useState<string | null>(null);
+
+  const {
+    mutate: extractText,
+    data: extractedText,
+    isPending: extracting,
+    reset: clearExtractedText,
+  } = useImageExtraction();
 
   const handleImageSelected = (uri: string) => {
     setImage(uri);
-    dispatch(clearExtractedText());
+    clearExtractedText();
   };
 
-  const handleExtractText = async () => {
+  const handleExtractText = () => {
     if (!image) {
       Alert.alert("No Image", "Please take or select an image first.");
       return;
     }
 
-    try {
-      await dispatch(extractText(image, accessToken, tokenType));
-    } catch (error) {
-      Alert.alert(
-        "Extraction Failed",
-        error instanceof Error ? error.message : "An error occurred"
-      );
-    }
+    extractText(image, {
+      onError: (error) => {
+        Alert.alert(
+          "Extraction Failed",
+          error instanceof Error ? error.message : "An error occurred",
+        );
+      },
+    });
   };
 
   const handleLogout = () => {
@@ -74,7 +78,7 @@ const HomeScreen: React.FC = () => {
 
   const handleExtractAnother = () => {
     setImage(null);
-    dispatch(clearExtractedText());
+    clearExtractedText();
   };
 
   return (

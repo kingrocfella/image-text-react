@@ -1,11 +1,24 @@
 import React, { useEffect } from "react";
 import { Provider } from "react-redux";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { PaperProvider, MD3LightTheme, MD3DarkTheme } from "react-native-paper";
 import Toast from "react-native-toast-message";
 import { useColorScheme } from "react-native";
 import { store, useAppDispatch, useAppSelector } from "./src/store";
 import AppNavigator from "./src/navigation/AppNavigator";
-import { loadThemeModeFromStorage } from "./src/store/actions/themeActions";
+import { loadThemeModeFromStorage } from "./src/store/slices/themeSlice";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 2,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+    mutations: {
+      retry: 1,
+    },
+  },
+});
 
 const customLightTheme = {
   ...MD3LightTheme,
@@ -80,8 +93,10 @@ const AppContent: React.FC = () => {
 
 export default function App() {
   return (
-    <Provider store={store}>
-      <AppContent />
-    </Provider>
+    <QueryClientProvider client={queryClient}>
+      <Provider store={store}>
+        <AppContent />
+      </Provider>
+    </QueryClientProvider>
   );
 }

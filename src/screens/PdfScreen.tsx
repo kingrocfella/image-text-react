@@ -21,23 +21,13 @@ import {
   Menu,
 } from "react-native-paper";
 import Toast from "react-native-toast-message";
-import { useAppDispatch, useAppSelector } from "../store";
 import MarkdownRenderer from "../components/MarkdownRenderer";
-import {
-  extractPdfText,
-  clearExtractedPdfText,
-  askPdfQuestion,
-} from "../store/actions/pdfActions";
+import { usePdfExtraction } from "../hooks";
 import AppHeader from "../components/AppHeader";
 import OpenaiPassModal from "../components/OpenaiPassModal";
 
 const PdfScreen: React.FC = () => {
-  const dispatch = useAppDispatch();
   const theme = useTheme();
-  const { accessToken, tokenType } = useAppSelector((state) => state.auth);
-  const { extractedText, description, requestId, extracting } = useAppSelector(
-    (state) => state.pdf
-  );
   const [pdfUri, setPdfUri] = useState<string | null>(null);
   const [pdfName, setPdfName] = useState<string | null>(null);
   const [query, setQuery] = useState<string>("");
@@ -50,6 +40,17 @@ const PdfScreen: React.FC = () => {
     string | null
   >(null);
   const [showOpenaiPass, setShowOpenaiPass] = useState(false);
+
+  const {
+    mutate: extractPdf,
+    data: pdfResult,
+    isPending: extracting,
+    reset: clearPdfResult,
+  } = usePdfExtraction();
+
+  const extractedText = pdfResult?.content ?? null;
+  const description = pdfResult?.description ?? null;
+  const requestId = pdfResult?.requestId ?? null;
 
   const modelOptions = ["openai", "ollama", "deepseek", "gemini"];
 
@@ -64,18 +65,18 @@ const PdfScreen: React.FC = () => {
         const asset = result.assets[0];
         setPdfUri(asset.uri);
         setPdfName(asset.name || "document.pdf");
-        dispatch(clearExtractedPdfText());
+        clearPdfResult();
       }
     } catch (error) {
       Alert.alert("Error", "Failed to pick PDF file");
     }
   };
 
-  const handleExtractText = async () => {
+  const handleExtractText = () => {
     if (!query.trim()) {
       Alert.alert(
         "Question Required",
-        "Please enter a question about the PDF uploaded."
+        "Please enter a question about the PDF uploaded.",
       );
       return;
     }
@@ -84,7 +85,7 @@ const PdfScreen: React.FC = () => {
       setModelError("Model selection is required");
       Alert.alert(
         "Model Required",
-        "Please select a model to use for extraction."
+        "Please select a model to use for extraction.",
       );
       return;
     }
@@ -92,50 +93,55 @@ const PdfScreen: React.FC = () => {
     if (model === "openai" && !openaiPass.trim()) {
       Alert.alert(
         "OpenAI Pass Required",
-        "Please enter your OpenAI pass to use this model."
+        "Please enter your OpenAI pass to use this model.",
       );
       return;
     }
 
     setModelError(null);
 
-    try {
-      // If we have a request_id, ask a follow-up question
-      if (requestId) {
-        await dispatch(
-          askPdfQuestion(
-            requestId,
-            query.trim(),
-            model,
-            model === "openai" ? openaiPass : undefined,
-            accessToken,
-            tokenType
-          )
-        );
-      } else {
-        // Otherwise, extract text from a new PDF
-        if (!pdfUri || !pdfName) {
-          Alert.alert("No PDF", "Please select a PDF file first.");
-          return;
-        }
-        await dispatch(
-          extractPdfText(
-            pdfUri,
-            pdfName,
-            query.trim(),
-            model,
-            model === "openai" ? openaiPass : undefined,
-            accessToken,
-            tokenType
-          )
-        );
+    // If we have a request_id, ask a follow-up question
+    if (requestId) {
+      extractPdf(
+        {
+          requestId,
+          query: query.trim(),
+          model,
+          openaiPass: model === "openai" ? openaiPass : undefined,
+        },
+        {
+          onSuccess: () => setQuery(""),
+          onError: (error) => {
+            Alert.alert(
+              "Extraction Failed",
+              error instanceof Error ? error.message : "An error occurred",
+            );
+          },
+        },
+      );
+    } else {
+      // Otherwise, extract text from a new PDF
+      if (!pdfUri || !pdfName) {
+        Alert.alert("No PDF", "Please select a PDF file first.");
+        return;
       }
-      // Clear the query after successful submission
-      setQuery("");
-    } catch (error) {
-      Alert.alert(
-        "Extraction Failed",
-        error instanceof Error ? error.message : "An error occurred"
+      extractPdf(
+        {
+          pdfUri,
+          pdfName,
+          query: query.trim(),
+          model,
+          openaiPass: model === "openai" ? openaiPass : undefined,
+        },
+        {
+          onSuccess: () => setQuery(""),
+          onError: (error) => {
+            Alert.alert(
+              "Extraction Failed",
+              error instanceof Error ? error.message : "An error occurred",
+            );
+          },
+        },
       );
     }
   };
@@ -168,7 +174,7 @@ const PdfScreen: React.FC = () => {
     setModel("");
     setModelError(null);
     setOpenaiPass("");
-    dispatch(clearExtractedPdfText());
+    clearPdfResult();
   };
 
   const handleUploadFreshPdf = () => {
@@ -178,7 +184,7 @@ const PdfScreen: React.FC = () => {
     setModel("");
     setModelError(null);
     setOpenaiPass("");
-    dispatch(clearExtractedPdfText());
+    clearPdfResult();
   };
 
   const handleModelSelect = (selectedModel: string) => {
@@ -373,8 +379,8 @@ const PdfScreen: React.FC = () => {
                   {extracting
                     ? "Processing..."
                     : requestId
-                    ? "Ask Question"
-                    : "Extract Text from PDF"}
+                      ? "Ask Question"
+                      : "Extract Text from PDF"}
                 </Button>
 
                 {pdfUri && !requestId && (
