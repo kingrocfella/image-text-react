@@ -87,9 +87,10 @@ export function validateResponse<T>(
   const result = schema.safeParse(data);
 
   if (!result.success) {
-    const errors = result.error.errors
-      .map((e) => `${e.path.join(".")}: ${e.message}`)
-      .join(", ");
+    const errors =
+      result.error?.issues
+        ?.map((e) => `${e.path.join(".")}: ${e.message}`)
+        .join(", ") || "Validation failed";
     throw new Error(`Invalid ${context} response: ${errors}`);
   }
 
