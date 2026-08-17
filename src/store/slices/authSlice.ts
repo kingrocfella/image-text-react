@@ -1,6 +1,9 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { API_CONFIG } from "../../../config";
+import { API_CONFIG, API_ROUTES } from "../../constants";
 import { RootState } from "../index";
+import { createMobileLogger } from "../../logging/logger";
+
+const logger = createMobileLogger("auth");
 import {
   LoginResponseSchema,
   RegisterResponseSchema,
@@ -54,7 +57,7 @@ export const login = createAsyncThunk<
   { rejectValue: string }
 >("auth/login", async (credentials, { rejectWithValue }) => {
   try {
-    const response = await fetch(`${API_CONFIG.BASE_URL}/auth/login`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}${API_ROUTES.authLogin}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -97,7 +100,7 @@ export const register = createAsyncThunk<
   { rejectValue: string }
 >("auth/register", async (credentials, { rejectWithValue }) => {
   try {
-    const response = await fetch(`${API_CONFIG.BASE_URL}/auth/register`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}${API_ROUTES.authRegister}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -138,7 +141,7 @@ export const refreshToken = createAsyncThunk<
   }
 
   try {
-    const response = await fetch(`${API_CONFIG.BASE_URL}/auth/refresh`, {
+    const response = await fetch(`${API_CONFIG.BASE_URL}${API_ROUTES.authRefresh}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -165,7 +168,7 @@ export const refreshToken = createAsyncThunk<
       tokenType: data.token_type,
     };
   } catch (error) {
-    console.error("Refresh token error:", error);
+    logger.error("Refresh token failed", error);
     return rejectWithValue("Token refresh failed");
   }
 });
@@ -185,7 +188,7 @@ export const logout = createAsyncThunk<void, void, { state: RootState }>(
           headers["Authorization"] = `${tokenType} ${accessToken}`;
         }
 
-        const response = await fetch(`${API_CONFIG.BASE_URL}/auth/logout`, {
+        const response = await fetch(`${API_CONFIG.BASE_URL}${API_ROUTES.authLogout}`, {
           method: "POST",
           headers,
           body: JSON.stringify({
@@ -194,10 +197,10 @@ export const logout = createAsyncThunk<void, void, { state: RootState }>(
         });
 
         if (!response.ok) {
-          console.error("Logout API call failed:", response.statusText);
+          logger.error("Logout API call failed", response.statusText);
         }
       } catch (error) {
-        console.error("Logout API error:", error);
+        logger.error("Logout API call errored", error);
       }
     }
   },

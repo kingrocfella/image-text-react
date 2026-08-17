@@ -1,4 +1,4 @@
-import { API_CONFIG } from "../../config";
+import { API_CONFIG, API_ROUTES } from "../constants";
 import { store } from "../store";
 import { refreshToken, clearAuth } from "../store/slices/authSlice";
 import {
@@ -79,7 +79,7 @@ export const pollJobStatus = async (
   messageId: string,
 ): Promise<JobCompletedResponse> => {
   while (true) {
-    const response = await apiCall(`${API_CONFIG.BASE_URL}/job/${messageId}`, {
+    const response = await apiCall(`${API_CONFIG.BASE_URL}${API_ROUTES.job(messageId)}`, {
       method: "GET",
     });
 
@@ -95,7 +95,9 @@ export const pollJobStatus = async (
     // Check if job is still pending
     const pendingResult = JobPendingResponseSchema.safeParse(data);
     if (pendingResult.success) {
-      await new Promise((resolve) => setTimeout(resolve, POLLING_INTERVAL));
+      await new Promise<void>((resolve) =>
+        setTimeout(() => resolve(), POLLING_INTERVAL),
+      );
       continue;
     }
 
@@ -127,7 +129,7 @@ export const extractTextFromImage = async (
     type: type,
   } as any);
 
-  const response = await apiCall(`${API_CONFIG.BASE_URL}/convert/image/text`, {
+  const response = await apiCall(`${API_CONFIG.BASE_URL}${API_ROUTES.imageToText}`, {
     method: "POST",
     body: formData,
   });
@@ -193,7 +195,7 @@ export const extractTextFromPdf = async (
     formData.append("openai_pass", params.openaiPass);
   }
 
-  const response = await apiCall(`${API_CONFIG.BASE_URL}/pdf/get/response`, {
+  const response = await apiCall(`${API_CONFIG.BASE_URL}${API_ROUTES.pdfResponse}`, {
     method: "POST",
     body: formData,
   });
@@ -248,7 +250,7 @@ export const transcribeAudio = async (audioUri: string): Promise<string> => {
     type: type,
   } as any);
 
-  const response = await apiCall(`${API_CONFIG.BASE_URL}/convert/sound/text`, {
+  const response = await apiCall(`${API_CONFIG.BASE_URL}${API_ROUTES.soundToText}`, {
     method: "POST",
     body: formData,
   });

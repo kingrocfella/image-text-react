@@ -1,5 +1,8 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { createMobileLogger } from "../../logging/logger";
+
+const logger = createMobileLogger("theme");
 
 // Types
 export type ThemeMode = "light" | "dark" | "system";
@@ -21,7 +24,7 @@ export const setThemeModePersisted = createAsyncThunk<ThemeMode, ThemeMode>(
     try {
       await AsyncStorage.setItem(THEME_STORAGE_KEY, mode);
     } catch (error) {
-      console.error("Failed to save theme mode:", error);
+      logger.error("Failed to save theme mode", error);
     }
     return mode;
   }
@@ -39,7 +42,7 @@ export const loadThemeModeFromStorage = createAsyncThunk<ThemeMode | null, void>
         return savedMode as ThemeMode;
       }
     } catch (error) {
-      console.error("Failed to load theme mode:", error);
+      logger.error("Failed to load theme mode", error);
     }
     return null;
   }

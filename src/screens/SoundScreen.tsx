@@ -20,6 +20,9 @@ import {
 } from "expo-audio";
 import { useAudioTranscription } from "../hooks";
 import AppHeader from "../components/AppHeader";
+import { createMobileLogger } from "../logging/logger";
+
+const logger = createMobileLogger("sound-screen");
 
 const SoundScreen: React.FC = () => {
   const theme = useTheme();
@@ -37,7 +40,7 @@ const SoundScreen: React.FC = () => {
   } = useAudioTranscription();
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: ReturnType<typeof setInterval>;
     if (recorderState.isRecording) {
       interval = setInterval(() => {
         setRecordingDuration((prev) => prev + 1);
@@ -72,7 +75,7 @@ const SoundScreen: React.FC = () => {
       setRecordingDuration(0);
     } catch (error) {
       Alert.alert("Error", "Failed to start recording");
-      console.error("Failed to start recording", error);
+      logger.error("Failed to start recording", error);
     }
   };
 
@@ -85,7 +88,7 @@ const SoundScreen: React.FC = () => {
       }
     } catch (error) {
       Alert.alert("Error", "Failed to stop recording");
-      console.error("Failed to stop recording", error);
+      logger.error("Failed to stop recording", error);
     }
   };
 

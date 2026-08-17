@@ -13,7 +13,10 @@ web-build/
 *.apk
 *.aab
 .env
-config.ts
+# NOTE: the old gitignored root config.ts is gone. App-wide public constants
+# live in the committed src/constants/index.ts — a mobile bundle is public, so
+# hiding them bought nothing and broke a clean checkout. Secrets stay on the
+# server, which is why this app has no environment file at all.
 
 # macOS
 .DS_Store
