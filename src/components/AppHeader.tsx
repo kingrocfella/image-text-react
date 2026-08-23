@@ -1,6 +1,7 @@
 import React from "react";
 import { View, StyleSheet } from "react-native";
 import { Surface, Text, IconButton, useTheme } from "react-native-paper";
+import AppLogo from "./AppLogo";
 import ThemeToggle from "./ThemeToggle";
 
 interface AppHeaderProps {
@@ -31,22 +32,27 @@ const AppHeader: React.FC<AppHeaderProps> = ({
     >
       <View style={styles.headerContent}>
         <View style={styles.headerLeft}>
-          <Text
-            variant="headlineMedium"
-            style={{ color: theme.colors.primary, fontWeight: "bold" }}
-            testID="app-header-title"
-          >
-            {title}
-          </Text>
-          {subtitle && (
+          <AppLogo size={42} testID="app-header-logo" />
+          <View style={styles.headerText}>
             <Text
-              variant="bodyMedium"
-              style={{ color: theme.colors.onSurfaceVariant }}
-              testID="app-header-subtitle"
+              variant="headlineSmall"
+              numberOfLines={1}
+              style={{ color: theme.colors.primary, fontWeight: "bold" }}
+              testID="app-header-title"
             >
-              {subtitle}
+              {title}
             </Text>
-          )}
+            {subtitle && (
+              <Text
+                variant="bodyMedium"
+                numberOfLines={1}
+                style={{ color: theme.colors.onSurfaceVariant }}
+                testID="app-header-subtitle"
+              >
+                {subtitle}
+              </Text>
+            )}
+          </View>
         </View>
         <View style={styles.headerRight}>
           <ThemeToggle />
@@ -79,6 +85,14 @@ const styles = StyleSheet.create({
   },
   headerLeft: {
     flex: 1,
+    minWidth: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  headerText: {
+    flex: 1,
+    minWidth: 0,
   },
   headerRight: {
     flexDirection: "row",
@@ -91,4 +105,3 @@ const styles = StyleSheet.create({
 });
 
 export default AppHeader;
-

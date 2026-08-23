@@ -20,6 +20,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useAppDispatch, useAppSelector } from "../store";
 import { login } from "../store/slices/authSlice";
 import { getEmailError, getPasswordError } from "../utils/validation";
+import AppLogo from "../components/AppLogo";
 
 type RootStackParamList = {
   Login: undefined;
@@ -83,6 +84,13 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
             elevation={2}
           >
             <View style={styles.header}>
+              <AppLogo size={76} />
+              <Text
+                variant="titleLarge"
+                style={[styles.brandName, { color: theme.colors.onSurface }]}
+              >
+                ScanGenAI
+              </Text>
               <Text
                 variant="displaySmall"
                 style={[styles.title, { color: theme.colors.primary }]}
@@ -213,6 +221,11 @@ const styles = StyleSheet.create({
   header: {
     marginBottom: 32,
     alignItems: "center",
+  },
+  brandName: {
+    fontWeight: "700",
+    marginTop: 12,
+    marginBottom: 20,
   },
   title: {
     fontWeight: "bold",
