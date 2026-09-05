@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "ScanGenAI",
-    "slug": "ScanGenAI",
+    "name": "Leon Frontier: ScanGenAI",
+    "slug": "leonfrontier-scangenai",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -16,6 +16,7 @@
     ],
     "ios": {
       "supportsTablet": true,
+      "bundleIdentifier": "com.leonfrontier.scangenai",
       "infoPlist": {
         "NSCameraUsageDescription": "This app needs access to your camera to take pictures.",
         "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to select images."
@@ -31,7 +32,7 @@
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE"
       ],
-      "package": "com.rocfella.imagetextreact"
+      "package": "com.leonfrontier.scangenai"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -41,7 +42,6 @@
         "projectId": "01ff9db2-9e1f-4524-a218-8998eef6a3ee"
       }
     },
-    "owner": "rocfella",
     "plugins": [
       "expo-asset"
     ]

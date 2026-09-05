@@ -97,7 +97,7 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
                 variant="titleLarge"
                 style={[styles.brandName, { color: theme.colors.onSurface }]}
               >
-                ScanGenAI
+                Leon Frontier: ScanGenAI
               </Text>
               <Text
                 variant="displaySmall"
@@ -217,7 +217,7 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
               <Button
                 mode="text"
                 onPress={() =>
-                  Linking.openURL("https://kingsleyabia.dev/scangenai/policy")
+                  Linking.openURL("https://leonfrontier.com/scangenai/privacy")
                 }
                 style={styles.privacyButton}
                 icon="shield-check"
