@@ -14,11 +14,9 @@
 
 export const API_CONFIG = {
   /**
-   * The ScanGenAI API's origin. The default is the loopback address the API's
-   * docker-compose publishes (`API_HOST_PORT`, default 8000) for local work;
-   * set the production origin here before a release build.
+   * The public ScanGenAI API origin served by the VPS reverse proxy.
    */
-  BASE_URL: "http://127.0.0.1:8000",
+  BASE_URL: "https://kingsley-api.name.ng",
 } as const;
 
 /**

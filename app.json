@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "Leon Frontier: ScanGenAI",
-    "slug": "leonfrontier-scangenai",
-    "version": "1.0.0",
+    "name": "ScanGenAI",
+    "slug": "ScanGenAI",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
