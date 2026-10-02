@@ -19,7 +19,7 @@ jest.mock("../../store/slices/authSlice", () => ({
 
 // Mock global fetch
 const mockFetch = jest.fn();
-global.fetch = mockFetch;
+globalThis.fetch = mockFetch;
 
 const mockStore = store as jest.Mocked<typeof store>;
 const mockRefreshToken = refreshToken as unknown as jest.Mock;

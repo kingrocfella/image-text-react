@@ -80,7 +80,7 @@ const createState = (overrides?: Partial<{ auth: any }>) => ({
 let currentState = createState();
 let alertSpy: jest.SpyInstance;
 
-beforeEach(() => {
+beforeEach(async () => {
   currentState = createState();
   mockDispatch.mockReset();
   mockDispatch.mockImplementation(() => Promise.resolve());
@@ -93,28 +93,28 @@ beforeEach(() => {
   alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
 });
 
-afterEach(() => {
+afterEach(async () => {
   alertSpy.mockRestore();
 });
 
-const renderLoginScreen = (props?: Partial<React.ComponentProps<typeof LoginScreen>>) => {
+const renderLoginScreen = async (props?: Partial<React.ComponentProps<typeof LoginScreen>>) => {
   const navigation = { navigate: jest.fn() };
   return {
     navigation,
-    ...render(<LoginScreen navigation={navigation as any} {...props} />),
+    ...(await render(<LoginScreen navigation={navigation as any} {...props} />)),
   };
 };
 
 describe('LoginScreen', () => {
-  it('renders email and password inputs', () => {
-    const { getByTestId } = renderLoginScreen();
+  it('renders email and password inputs', async () => {
+    const { getByTestId } = await renderLoginScreen();
     expect(getByTestId('email-input')).toBeTruthy();
     expect(getByTestId('password-input')).toBeTruthy();
   });
 
-  it('shows validation errors when submitting empty form', () => {
-    const { getByTestId, getByText } = renderLoginScreen();
-    fireEvent.press(getByTestId('login-button'));
+  it('shows validation errors when submitting empty form', async () => {
+    const { getByTestId, getByText } = await renderLoginScreen();
+    await fireEvent.press(getByTestId('login-button'));
     expect(getByText('Email is required')).toBeTruthy();
     expect(getByText('Password is required')).toBeTruthy();
   });
@@ -122,30 +122,30 @@ describe('LoginScreen', () => {
   it('dispatches login action with valid credentials', async () => {
     const thunk = jest.fn();
     mockLogin.mockReturnValue(thunk);
-    const { getByTestId } = renderLoginScreen();
+    const { getByTestId } = await renderLoginScreen();
 
-    fireEvent.changeText(getByTestId('email-input'), 'user@example.com');
-    fireEvent.changeText(getByTestId('password-input'), 'secret123');
+    await fireEvent.changeText(getByTestId('email-input'), 'user@example.com');
+    await fireEvent.changeText(getByTestId('password-input'), 'secret123');
 
     await act(async () => {
-      fireEvent.press(getByTestId('login-button'));
+      await fireEvent.press(getByTestId('login-button'));
     });
 
     expect(mockLogin).toHaveBeenCalledWith({ email: 'user@example.com', password: 'secret123' });
     expect(mockDispatch).toHaveBeenCalledWith(thunk);
   });
 
-  it('toggles password visibility when eye icon is pressed', () => {
-    const { getByTestId } = renderLoginScreen();
+  it('toggles password visibility when eye icon is pressed', async () => {
+    const { getByTestId } = await renderLoginScreen();
     const passwordInput = getByTestId('password-input');
     expect(passwordInput.props.secureTextEntry).toBe(true);
-    fireEvent.press(getByTestId('toggle-password-visibility'));
+    await fireEvent.press(getByTestId('toggle-password-visibility'));
     expect(passwordInput.props.secureTextEntry).toBe(false);
   });
 
-  it('navigates to register screen when link is pressed', () => {
-    const { getByTestId, navigation } = renderLoginScreen();
-    fireEvent.press(getByTestId('register-link'));
+  it('navigates to register screen when link is pressed', async () => {
+    const { getByTestId, navigation } = await renderLoginScreen();
+    await fireEvent.press(getByTestId('register-link'));
     expect(navigation.navigate).toHaveBeenCalledWith('Register');
   });
 });

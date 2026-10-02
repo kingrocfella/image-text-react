@@ -1,5 +1,10 @@
 import React from 'react';
-import { NavigationContainer, Theme } from '@react-navigation/native';
+import {
+  DarkTheme,
+  DefaultTheme,
+  NavigationContainer,
+  Theme,
+} from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
@@ -69,6 +74,7 @@ const AppNavigator: React.FC = () => {
   const theme = useTheme();
 
   const navigationTheme: Theme = {
+    ...(theme.dark ? DarkTheme : DefaultTheme),
     dark: theme.dark,
     colors: {
       primary: theme.colors.primary,

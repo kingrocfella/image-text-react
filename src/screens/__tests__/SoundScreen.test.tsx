@@ -85,7 +85,7 @@ let mockMutationState = {
   isPending: false,
 };
 
-beforeEach(() => {
+beforeEach(async () => {
   mockMutationState = { data: undefined, isPending: false };
   mockMutate.mockClear();
   mockReset.mockClear();
@@ -108,29 +108,29 @@ beforeEach(() => {
   alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
 });
 
-afterEach(() => {
+afterEach(async () => {
   alertSpy.mockRestore();
 });
 
 const renderSoundScreen = () => render(<SoundScreen />);
 
 describe("SoundScreen", () => {
-  it("renders the app title", () => {
-    const { getByTestId } = renderSoundScreen();
+  it("renders the app title", async () => {
+    const { getByTestId } = await renderSoundScreen();
     expect(getByTestId("app-header-title").props.children).toBe("Audio to Text");
   });
 
-  it("renders welcome screen with record and upload buttons", () => {
-    const { getByTestId } = renderSoundScreen();
+  it("renders welcome screen with record and upload buttons", async () => {
+    const { getByTestId } = await renderSoundScreen();
     expect(getByTestId("start-recording-button")).toBeTruthy();
     expect(getByTestId("upload-audio-button")).toBeTruthy();
   });
 
   it("requests permission and starts recording when record button is pressed", async () => {
-    const { getByTestId } = renderSoundScreen();
+    const { getByTestId } = await renderSoundScreen();
 
     await act(async () => {
-      fireEvent.press(getByTestId("start-recording-button"));
+      await fireEvent.press(getByTestId("start-recording-button"));
     });
 
     expect(mockRequestPermissions).toHaveBeenCalledTimes(1);
@@ -140,10 +140,10 @@ describe("SoundScreen", () => {
 
   it("shows alert when microphone permission is denied", async () => {
     mockRequestPermissions.mockResolvedValueOnce({ granted: false });
-    const { getByTestId } = renderSoundScreen();
+    const { getByTestId } = await renderSoundScreen();
 
     await act(async () => {
-      fireEvent.press(getByTestId("start-recording-button"));
+      await fireEvent.press(getByTestId("start-recording-button"));
     });
 
     expect(alertSpy).toHaveBeenCalledWith(
@@ -159,10 +159,10 @@ describe("SoundScreen", () => {
       assets: [{ uri: "mock-audio-uri", name: "test-audio.m4a" }],
     });
 
-    const { getByTestId } = renderSoundScreen();
+    const { getByTestId } = await renderSoundScreen();
 
     await act(async () => {
-      fireEvent.press(getByTestId("upload-audio-button"));
+      await fireEvent.press(getByTestId("upload-audio-button"));
     });
 
     expect(mockDocumentPicker).toHaveBeenCalledWith({
@@ -177,10 +177,10 @@ describe("SoundScreen", () => {
       assets: [{ uri: "mock-audio-uri", name: "test-audio.m4a" }],
     });
 
-    const { getByTestId } = renderSoundScreen();
+    const { getByTestId } = await renderSoundScreen();
 
     await act(async () => {
-      fireEvent.press(getByTestId("upload-audio-button"));
+      await fireEvent.press(getByTestId("upload-audio-button"));
     });
 
     await waitFor(() => {
@@ -196,16 +196,16 @@ describe("SoundScreen", () => {
       assets: [{ uri: "mock-audio-uri", name: "test-audio.m4a" }],
     });
 
-    const { getByTestId } = renderSoundScreen();
+    const { getByTestId } = await renderSoundScreen();
 
     // Upload audio file
     await act(async () => {
-      fireEvent.press(getByTestId("upload-audio-button"));
+      await fireEvent.press(getByTestId("upload-audio-button"));
     });
 
     // Press transcribe button
     await act(async () => {
-      fireEvent.press(getByTestId("transcribe-button"));
+      await fireEvent.press(getByTestId("transcribe-button"));
     });
 
     expect(mockMutate).toHaveBeenCalledWith(
@@ -227,10 +227,10 @@ describe("SoundScreen", () => {
       reset: mockReset,
     });
 
-    const { getByTestId } = renderSoundScreen();
+    const { getByTestId } = await renderSoundScreen();
 
     await act(async () => {
-      fireEvent.press(getByTestId("upload-audio-button"));
+      await fireEvent.press(getByTestId("upload-audio-button"));
     });
 
     expect(getByTestId("transcribe-loader")).toBeTruthy();
@@ -249,10 +249,10 @@ describe("SoundScreen", () => {
       reset: mockReset,
     });
 
-    const { getByTestId } = renderSoundScreen();
+    const { getByTestId } = await renderSoundScreen();
 
     await act(async () => {
-      fireEvent.press(getByTestId("upload-audio-button"));
+      await fireEvent.press(getByTestId("upload-audio-button"));
     });
 
     expect(getByTestId("transcribed-text").props.children).toBe(
@@ -273,14 +273,14 @@ describe("SoundScreen", () => {
       reset: mockReset,
     });
 
-    const { getByTestId } = renderSoundScreen();
+    const { getByTestId } = await renderSoundScreen();
 
     await act(async () => {
-      fireEvent.press(getByTestId("upload-audio-button"));
+      await fireEvent.press(getByTestId("upload-audio-button"));
     });
 
     await act(async () => {
-      fireEvent.press(getByTestId("copy-button"));
+      await fireEvent.press(getByTestId("copy-button"));
     });
 
     expect(mockClipboardSet).toHaveBeenCalledWith("Copied Audio Text");
@@ -305,14 +305,14 @@ describe("SoundScreen", () => {
       reset: mockReset,
     });
 
-    const { getByTestId } = renderSoundScreen();
+    const { getByTestId } = await renderSoundScreen();
 
     await act(async () => {
-      fireEvent.press(getByTestId("upload-audio-button"));
+      await fireEvent.press(getByTestId("upload-audio-button"));
     });
 
     await act(async () => {
-      fireEvent.press(getByTestId("transcribe-another-button"));
+      await fireEvent.press(getByTestId("transcribe-another-button"));
     });
 
     expect(mockReset).toHaveBeenCalled();

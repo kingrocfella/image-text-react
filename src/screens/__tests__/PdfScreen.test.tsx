@@ -76,7 +76,7 @@ let mockMutationState: MockMutationState = {
   isPending: false,
 };
 
-beforeEach(() => {
+beforeEach(async () => {
   mockMutationState = { data: undefined, isPending: false };
   mockMutate.mockClear();
   mockReset.mockClear();
@@ -92,20 +92,20 @@ beforeEach(() => {
   alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
 });
 
-afterEach(() => {
+afterEach(async () => {
   alertSpy.mockRestore();
 });
 
 const renderPdfScreen = () => render(<PdfScreen />);
 
 describe("PdfScreen", () => {
-  it("renders the PDF screen title", () => {
-    const { getByTestId } = renderPdfScreen();
+  it("renders the PDF screen title", async () => {
+    const { getByTestId } = await renderPdfScreen();
     expect(getByTestId("app-header-title")).toBeTruthy();
   });
 
-  it("renders upload button when no PDF is selected", () => {
-    const { getByTestId } = renderPdfScreen();
+  it("renders upload button when no PDF is selected", async () => {
+    const { getByTestId } = await renderPdfScreen();
     expect(getByTestId("upload-pdf-button")).toBeTruthy();
   });
 
@@ -115,10 +115,10 @@ describe("PdfScreen", () => {
       assets: [{ uri: "mock-pdf-uri", name: "test-document.pdf" }],
     });
 
-    const { getByTestId } = renderPdfScreen();
+    const { getByTestId } = await renderPdfScreen();
 
     await act(async () => {
-      fireEvent.press(getByTestId("upload-pdf-button"));
+      await fireEvent.press(getByTestId("upload-pdf-button"));
     });
 
     expect(getByTestId("pdf-name")).toBeTruthy();
@@ -131,10 +131,10 @@ describe("PdfScreen", () => {
       assets: [{ uri: "mock-pdf-uri", name: "test.pdf" }],
     });
 
-    const { getByTestId } = renderPdfScreen();
+    const { getByTestId } = await renderPdfScreen();
 
     await act(async () => {
-      fireEvent.press(getByTestId("upload-pdf-button"));
+      await fireEvent.press(getByTestId("upload-pdf-button"));
     });
 
     expect(getByTestId("question-input")).toBeTruthy();
@@ -146,10 +146,10 @@ describe("PdfScreen", () => {
       assets: [{ uri: "mock-pdf-uri", name: "test.pdf" }],
     });
 
-    const { getByTestId } = renderPdfScreen();
+    const { getByTestId } = await renderPdfScreen();
 
     await act(async () => {
-      fireEvent.press(getByTestId("upload-pdf-button"));
+      await fireEvent.press(getByTestId("upload-pdf-button"));
     });
 
     expect(getByTestId("model-dropdown")).toBeTruthy();
@@ -161,10 +161,10 @@ describe("PdfScreen", () => {
       assets: [{ uri: "mock-pdf-uri", name: "test.pdf" }],
     });
 
-    const { getByTestId } = renderPdfScreen();
+    const { getByTestId } = await renderPdfScreen();
 
     await act(async () => {
-      fireEvent.press(getByTestId("upload-pdf-button"));
+      await fireEvent.press(getByTestId("upload-pdf-button"));
     });
 
     // Should have the "Extract Another" button that allows re-uploading
@@ -173,7 +173,7 @@ describe("PdfScreen", () => {
 
     // Pressing it should trigger document picker
     await act(async () => {
-      fireEvent.press(extractAnotherButton);
+      await fireEvent.press(extractAnotherButton);
     });
 
     expect(mockGetDocumentAsync).toHaveBeenCalledTimes(2);
@@ -185,10 +185,10 @@ describe("PdfScreen", () => {
       assets: [{ uri: "mock-pdf-uri", name: "test.pdf" }],
     });
 
-    const { getByTestId } = renderPdfScreen();
+    const { getByTestId } = await renderPdfScreen();
 
     await act(async () => {
-      fireEvent.press(getByTestId("upload-pdf-button"));
+      await fireEvent.press(getByTestId("upload-pdf-button"));
     });
 
     const extractButton = getByTestId("extract-pdf-button");
@@ -208,17 +208,17 @@ describe("PdfScreen", () => {
       assets: [{ uri: "mock-pdf-uri", name: "test.pdf" }],
     });
 
-    const { getByTestId } = renderPdfScreen();
+    const { getByTestId } = await renderPdfScreen();
 
     // First select a PDF to set pdfUri state, which is required for loader to show
     await act(async () => {
-      fireEvent.press(getByTestId("upload-pdf-button"));
+      await fireEvent.press(getByTestId("upload-pdf-button"));
     });
 
     expect(getByTestId("extract-loader")).toBeTruthy();
   });
 
-  it("displays extracted text when available", () => {
+  it("displays extracted text when available", async () => {
     mockUsePdfExtraction.mockReturnValue({
       mutate: mockMutate,
       data: {
@@ -230,7 +230,7 @@ describe("PdfScreen", () => {
       reset: mockReset,
     });
 
-    const { getByTestId } = renderPdfScreen();
+    const { getByTestId } = await renderPdfScreen();
 
     // When there's data with requestId, the screen shows the extracted content
     expect(getByTestId("extracted-text").props.children).toBe(
@@ -250,11 +250,11 @@ describe("PdfScreen", () => {
       reset: mockReset,
     });
 
-    const { getByTestId } = renderPdfScreen();
+    const { getByTestId } = await renderPdfScreen();
 
     // When there's data with requestId, the copy button is available
     await act(async () => {
-      fireEvent.press(getByTestId("copy-button"));
+      await fireEvent.press(getByTestId("copy-button"));
     });
 
     expect(mockClipboardSet).toHaveBeenCalledWith("PDF Text Content");
@@ -278,17 +278,17 @@ describe("PdfScreen", () => {
       reset: mockReset,
     });
 
-    const { getByTestId } = renderPdfScreen();
+    const { getByTestId } = await renderPdfScreen();
 
     // When there's data with requestId, the extract another button is available
     await act(async () => {
-      fireEvent.press(getByTestId("extract-another-button"));
+      await fireEvent.press(getByTestId("extract-another-button"));
     });
 
     expect(mockReset).toHaveBeenCalled();
   });
 
-  it("displays description when available", () => {
+  it("displays description when available", async () => {
     mockUsePdfExtraction.mockReturnValue({
       mutate: mockMutate,
       data: {
@@ -300,7 +300,7 @@ describe("PdfScreen", () => {
       reset: mockReset,
     });
 
-    const { getByTestId } = renderPdfScreen();
+    const { getByTestId } = await renderPdfScreen();
 
     // When requestId exists, description should be visible without needing to upload
     expect(getByTestId("description-text")).toBeTruthy();
@@ -309,7 +309,7 @@ describe("PdfScreen", () => {
     );
   });
 
-  it("shows follow-up question input when requestId exists", () => {
+  it("shows follow-up question input when requestId exists", async () => {
     mockUsePdfExtraction.mockReturnValue({
       mutate: mockMutate,
       data: {
@@ -321,13 +321,13 @@ describe("PdfScreen", () => {
       reset: mockReset,
     });
 
-    const { getByTestId } = renderPdfScreen();
+    const { getByTestId } = await renderPdfScreen();
 
     expect(getByTestId("question-input-followup")).toBeTruthy();
     expect(getByTestId("ask-question-button")).toBeTruthy();
   });
 
-  it("displays Upload Fresh PDF button when requestId exists", () => {
+  it("displays Upload Fresh PDF button when requestId exists", async () => {
     mockUsePdfExtraction.mockReturnValue({
       mutate: mockMutate,
       data: {
@@ -339,13 +339,13 @@ describe("PdfScreen", () => {
       reset: mockReset,
     });
 
-    const { getByTestId } = renderPdfScreen();
+    const { getByTestId } = await renderPdfScreen();
 
     expect(getByTestId("upload-fresh-pdf-button")).toBeTruthy();
   });
 
-  it("renders ThemeToggle component in header", () => {
-    const { getByTestId } = renderPdfScreen();
+  it("renders ThemeToggle component in header", async () => {
+    const { getByTestId } = await renderPdfScreen();
     expect(getByTestId("theme-toggle")).toBeTruthy();
   });
 });

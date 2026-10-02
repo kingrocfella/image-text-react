@@ -14,7 +14,8 @@
     "strict": true,
     "forceConsistentCasingInFileNames": true,
     "noEmit": true,
-    "isolatedModules": true
+    "isolatedModules": true,
+    "types": ["jest"]
   },
   "include": [
     "**/*.ts",

@@ -150,79 +150,79 @@ jest.mock("@expo/vector-icons", () => ({
 const mockUseAppSelector = useAppSelector as jest.Mock;
 
 describe("AppNavigator", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     jest.clearAllMocks();
   });
 
   describe("when user is not authenticated", () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       mockUseAppSelector.mockImplementation((selector) =>
         selector({ auth: { isAuthenticated: false } }),
       );
     });
 
-    it("renders login screen", () => {
-      const { getByTestId } = render(<AppNavigator />);
+    it("renders login screen", async () => {
+      const { getByTestId } = await render(<AppNavigator />);
       expect(getByTestId("login-screen")).toBeTruthy();
     });
 
-    it("renders register screen", () => {
-      const { getByTestId } = render(<AppNavigator />);
+    it("renders register screen", async () => {
+      const { getByTestId } = await render(<AppNavigator />);
       expect(getByTestId("register-screen")).toBeTruthy();
     });
 
-    it("does not render home screen", () => {
-      const { queryByTestId } = render(<AppNavigator />);
+    it("does not render home screen", async () => {
+      const { queryByTestId } = await render(<AppNavigator />);
       expect(queryByTestId("home-screen")).toBeNull();
     });
 
-    it("renders navigation container", () => {
-      const { getByTestId } = render(<AppNavigator />);
+    it("renders navigation container", async () => {
+      const { getByTestId } = await render(<AppNavigator />);
       expect(getByTestId("navigation-container")).toBeTruthy();
     });
   });
 
   describe("when user is authenticated", () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       mockUseAppSelector.mockImplementation((selector) =>
         selector({ auth: { isAuthenticated: true } }),
       );
     });
 
-    it("renders home screen (main tabs)", () => {
-      const { getByTestId } = render(<AppNavigator />);
+    it("renders home screen (main tabs)", async () => {
+      const { getByTestId } = await render(<AppNavigator />);
       expect(getByTestId("home-screen")).toBeTruthy();
     });
 
-    it("renders PDF screen in tabs", () => {
-      const { getByTestId } = render(<AppNavigator />);
+    it("renders PDF screen in tabs", async () => {
+      const { getByTestId } = await render(<AppNavigator />);
       expect(getByTestId("pdf-screen")).toBeTruthy();
     });
 
-    it("renders Sound screen in tabs", () => {
-      const { getByTestId } = render(<AppNavigator />);
+    it("renders Sound screen in tabs", async () => {
+      const { getByTestId } = await render(<AppNavigator />);
       expect(getByTestId("sound-screen")).toBeTruthy();
     });
 
-    it("does not render login screen", () => {
-      const { queryByTestId } = render(<AppNavigator />);
+    it("does not render login screen", async () => {
+      const { queryByTestId } = await render(<AppNavigator />);
       expect(queryByTestId("login-screen")).toBeNull();
     });
 
-    it("does not render register screen", () => {
-      const { queryByTestId } = render(<AppNavigator />);
+    it("does not render register screen", async () => {
+      const { queryByTestId } = await render(<AppNavigator />);
       expect(queryByTestId("register-screen")).toBeNull();
     });
   });
 
   describe("authentication state changes", () => {
-    it("switches from login to home on authentication", () => {
+    it("switches from login to home on authentication", async () => {
       // Start unauthenticated
       mockUseAppSelector.mockImplementation((selector) =>
         selector({ auth: { isAuthenticated: false } }),
       );
 
-      const { getByTestId, queryByTestId, rerender } = render(<AppNavigator />);
+      const { getByTestId, queryByTestId, rerender } = await render(<AppNavigator />);
       expect(getByTestId("login-screen")).toBeTruthy();
       expect(queryByTestId("home-screen")).toBeNull();
 
@@ -231,18 +231,18 @@ describe("AppNavigator", () => {
         selector({ auth: { isAuthenticated: true } }),
       );
 
-      rerender(<AppNavigator />);
+      await rerender(<AppNavigator />);
       expect(queryByTestId("login-screen")).toBeNull();
       expect(getByTestId("home-screen")).toBeTruthy();
     });
 
-    it("switches from home to login on logout", () => {
+    it("switches from home to login on logout", async () => {
       // Start authenticated
       mockUseAppSelector.mockImplementation((selector) =>
         selector({ auth: { isAuthenticated: true } }),
       );
 
-      const { getByTestId, queryByTestId, rerender } = render(<AppNavigator />);
+      const { getByTestId, queryByTestId, rerender } = await render(<AppNavigator />);
       expect(getByTestId("home-screen")).toBeTruthy();
 
       // Logout
@@ -250,7 +250,7 @@ describe("AppNavigator", () => {
         selector({ auth: { isAuthenticated: false } }),
       );
 
-      rerender(<AppNavigator />);
+      await rerender(<AppNavigator />);
       expect(getByTestId("login-screen")).toBeTruthy();
       expect(queryByTestId("home-screen")).toBeNull();
     });

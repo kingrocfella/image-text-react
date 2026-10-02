@@ -99,7 +99,7 @@ let mockMutationState = {
   isPending: false,
 };
 
-beforeEach(() => {
+beforeEach(async () => {
   currentState = createState();
   mockMutationState = { data: undefined, isPending: false };
   mockDispatch.mockReset();
@@ -123,54 +123,54 @@ beforeEach(() => {
   alertSpy = jest.spyOn(Alert, "alert").mockImplementation(() => {});
 });
 
-afterEach(() => {
+afterEach(async () => {
   alertSpy.mockRestore();
 });
 
 const renderHomeScreen = () => render(<HomeScreen />);
 
 describe("HomeScreen", () => {
-  it("renders the app title", () => {
-    const { getByTestId } = renderHomeScreen();
+  it("renders the app title", async () => {
+    const { getByTestId } = await renderHomeScreen();
     expect(getByTestId("app-header-title").props.children).toBe("Image to Text");
   });
 
-  it("displays welcome message when user exists", () => {
-    const { getByTestId } = renderHomeScreen();
+  it("displays welcome message when user exists", async () => {
+    const { getByTestId } = await renderHomeScreen();
     expect(getByTestId("app-header-subtitle").props.children).toContain(
       "John Doe",
     );
   });
 
-  it("renders image picker when no image is selected", () => {
-    const { getByTestId } = renderHomeScreen();
+  it("renders image picker when no image is selected", async () => {
+    const { getByTestId } = await renderHomeScreen();
     expect(getByTestId("mock-image-picker")).toBeTruthy();
   });
 
-  it("calls reset when an image is selected", () => {
-    const { getByTestId } = renderHomeScreen();
-    fireEvent.press(getByTestId("mock-image-picker"));
+  it("calls reset when an image is selected", async () => {
+    const { getByTestId } = await renderHomeScreen();
+    await fireEvent.press(getByTestId("mock-image-picker"));
     expect(mockReset).toHaveBeenCalledTimes(1);
   });
 
-  it("shows extract button after image selection", () => {
-    const { getByTestId, getByText } = renderHomeScreen();
-    fireEvent.press(getByTestId("mock-image-picker"));
+  it("shows extract button after image selection", async () => {
+    const { getByTestId, getByText } = await renderHomeScreen();
+    await fireEvent.press(getByTestId("mock-image-picker"));
     expect(getByText("Extract Text from Picture")).toBeTruthy();
   });
 
   it("calls mutate when extract button is pressed", async () => {
-    const { getByTestId, getByText } = renderHomeScreen();
-    fireEvent.press(getByTestId("mock-image-picker"));
+    const { getByTestId, getByText } = await renderHomeScreen();
+    await fireEvent.press(getByTestId("mock-image-picker"));
 
     await act(async () => {
-      fireEvent.press(getByText("Extract Text from Picture"));
+      await fireEvent.press(getByText("Extract Text from Picture"));
     });
 
     expect(mockMutate).toHaveBeenCalledWith("mock-image-uri", expect.any(Object));
   });
 
-  it("shows loader when isPending is true", () => {
+  it("shows loader when isPending is true", async () => {
     mockMutationState.isPending = true;
     mockUseImageExtraction.mockReturnValue({
       mutate: mockMutate,
@@ -178,20 +178,20 @@ describe("HomeScreen", () => {
       isPending: true,
       reset: mockReset,
     });
-    const { getByTestId } = renderHomeScreen();
-    fireEvent.press(getByTestId("mock-image-picker"));
+    const { getByTestId } = await renderHomeScreen();
+    await fireEvent.press(getByTestId("mock-image-picker"));
     expect(getByTestId("extract-loader")).toBeTruthy();
   });
 
-  it("displays extracted text when available and hides extract button", () => {
+  it("displays extracted text when available and hides extract button", async () => {
     mockUseImageExtraction.mockReturnValue({
       mutate: mockMutate,
       data: "Hello World",
       isPending: false,
       reset: mockReset,
     });
-    const { getByTestId, queryByText } = renderHomeScreen();
-    fireEvent.press(getByTestId("mock-image-picker"));
+    const { getByTestId, queryByText } = await renderHomeScreen();
+    await fireEvent.press(getByTestId("mock-image-picker"));
     expect(getByTestId("extracted-text").props.children).toBe("Hello World");
     expect(queryByText("Extract Text from Picture")).toBeNull();
   });
@@ -203,11 +203,11 @@ describe("HomeScreen", () => {
       isPending: false,
       reset: mockReset,
     });
-    const { getByTestId } = renderHomeScreen();
-    fireEvent.press(getByTestId("mock-image-picker"));
+    const { getByTestId } = await renderHomeScreen();
+    await fireEvent.press(getByTestId("mock-image-picker"));
 
     await act(async () => {
-      fireEvent.press(getByTestId("copy-button"));
+      await fireEvent.press(getByTestId("copy-button"));
     });
 
     expect(mockClipboardSet).toHaveBeenCalledWith("Copied Text");
@@ -219,9 +219,9 @@ describe("HomeScreen", () => {
     );
   });
 
-  it("dispatches logout action when logout button is pressed", () => {
-    const { getByTestId } = renderHomeScreen();
-    fireEvent.press(getByTestId("logout-button"));
+  it("dispatches logout action when logout button is pressed", async () => {
+    const { getByTestId } = await renderHomeScreen();
+    await fireEvent.press(getByTestId("logout-button"));
     expect(mockLogout).toHaveBeenCalledTimes(1);
     expect(mockDispatch).toHaveBeenCalledWith({ type: "auth/logout/pending" });
   });
