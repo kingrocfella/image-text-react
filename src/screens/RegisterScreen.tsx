@@ -18,6 +18,8 @@ import {
   getNameError,
 } from "../utils/validation";
 import AppLogo from "../components/AppLogo";
+import SocialSignIn from "../components/SocialSignIn";
+import { LEGAL_URLS } from "../constants";
 
 type RootStackParamList = {
   Login: undefined;
@@ -204,6 +206,8 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
                 Register
               </Button>
 
+              <SocialSignIn mode="sign-up" />
+
               <Button
                 mode="text"
                 onPress={() => navigation.navigate("Login")}
@@ -216,9 +220,7 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
 
               <Button
                 mode="text"
-                onPress={() =>
-                  Linking.openURL("https://leonfrontier.com/scangenai/privacy")
-                }
+                onPress={() => Linking.openURL(LEGAL_URLS.privacy)}
                 style={styles.privacyButton}
                 icon="shield-check"
                 testID="privacy-policy-link"

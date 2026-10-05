@@ -22,9 +22,13 @@ import {
 } from "react-native-paper";
 import Toast from "react-native-toast-message";
 import MarkdownRenderer from "../components/MarkdownRenderer";
-import { usePdfExtraction } from "../hooks";
+import { useQueryClient } from "@tanstack/react-query";
+import { ACCOUNT_QUERY_KEY, useAccount, usePdfExtraction } from "../hooks";
 import AppHeader from "../components/AppHeader";
-import OpenaiPassModal from "../components/OpenaiPassModal";
+import { tooLargeMessage } from "../utils/uploadLimits";
+import { modelLabel } from "../utils/plan";
+import { ApiRequestError } from "../api/http";
+import { useNavigation } from "@react-navigation/native";
 
 const PdfScreen: React.FC = () => {
   const theme = useTheme();
@@ -34,12 +38,8 @@ const PdfScreen: React.FC = () => {
   const [model, setModel] = useState<string>("");
   const [modelMenuVisible, setModelMenuVisible] = useState(false);
   const [modelError, setModelError] = useState<string | null>(null);
-  const [openaiPass, setOpenaiPass] = useState<string>("");
-  const [openaiPassModalVisible, setOpenaiPassModalVisible] = useState(false);
-  const [pendingModelSelection, setPendingModelSelection] = useState<
-    string | null
-  >(null);
-  const [showOpenaiPass, setShowOpenaiPass] = useState(false);
+  const queryClient = useQueryClient();
+  const { data: account } = useAccount();
 
   const {
     mutate: extractPdf,
@@ -52,7 +52,28 @@ const PdfScreen: React.FC = () => {
   const description = pdfResult?.description ?? null;
   const requestId = pdfResult?.requestId ?? null;
 
-  const modelOptions = ["openai", "ollama", "deepseek", "gemini"];
+  // The server decides which models exist for this deployment (GET /v1/me);
+  // a model it does not offer cannot be requested.
+  const modelOptions = account?.models ?? [];
+  // Models this deployment has but this plan does not: shown locked.
+  const lockedModels = account?.pro_models ?? [];
+  const navigation =
+    useNavigation<{
+      navigate: (screen: "Paywall", params?: { reason?: string }) => void;
+    }>();
+
+  const handleFailure = (error: unknown) => {
+    const message = error instanceof Error ? error.message : "An error occurred";
+    if (error instanceof ApiRequestError && error.needsPro) {
+      navigation.navigate("Paywall", { reason: message });
+      return;
+    }
+    Alert.alert("Extraction Failed", message);
+  };
+
+  // Each question spends part of the monthly allowance; show the new totals.
+  const refreshUsage = () =>
+    queryClient.invalidateQueries({ queryKey: ACCOUNT_QUERY_KEY });
 
   const handlePickDocument = async () => {
     try {
@@ -63,11 +84,16 @@ const PdfScreen: React.FC = () => {
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
         const asset = result.assets[0];
+        const tooLarge = tooLargeMessage("pdfBytes", asset.size);
+        if (tooLarge) {
+          Alert.alert("File Too Large", tooLarge);
+          return;
+        }
         setPdfUri(asset.uri);
         setPdfName(asset.name || "document.pdf");
         clearPdfResult();
       }
-    } catch (error) {
+    } catch {
       Alert.alert("Error", "Failed to pick PDF file");
     }
   };
@@ -90,14 +116,6 @@ const PdfScreen: React.FC = () => {
       return;
     }
 
-    if (model === "openai" && !openaiPass.trim()) {
-      Alert.alert(
-        "OpenAI Pass Required",
-        "Please enter your OpenAI pass to use this model.",
-      );
-      return;
-    }
-
     setModelError(null);
 
     // If we have a request_id, ask a follow-up question
@@ -107,16 +125,11 @@ const PdfScreen: React.FC = () => {
           requestId,
           query: query.trim(),
           model,
-          openaiPass: model === "openai" ? openaiPass : undefined,
         },
         {
+          onSettled: refreshUsage,
           onSuccess: () => setQuery(""),
-          onError: (error) => {
-            Alert.alert(
-              "Extraction Failed",
-              error instanceof Error ? error.message : "An error occurred",
-            );
-          },
+          onError: handleFailure,
         },
       );
     } else {
@@ -131,16 +144,11 @@ const PdfScreen: React.FC = () => {
           pdfName,
           query: query.trim(),
           model,
-          openaiPass: model === "openai" ? openaiPass : undefined,
         },
         {
+          onSettled: refreshUsage,
           onSuccess: () => setQuery(""),
-          onError: (error) => {
-            Alert.alert(
-              "Extraction Failed",
-              error instanceof Error ? error.message : "An error occurred",
-            );
-          },
+          onError: handleFailure,
         },
       );
     }
@@ -157,7 +165,7 @@ const PdfScreen: React.FC = () => {
         position: "bottom",
         visibilityTime: 2000,
       });
-    } catch (error) {
+    } catch {
       Toast.show({
         type: "error",
         text1: "Failed to copy text",
@@ -173,7 +181,6 @@ const PdfScreen: React.FC = () => {
     setQuery("");
     setModel("");
     setModelError(null);
-    setOpenaiPass("");
     clearPdfResult();
   };
 
@@ -183,44 +190,20 @@ const PdfScreen: React.FC = () => {
     setQuery("");
     setModel("");
     setModelError(null);
-    setOpenaiPass("");
     clearPdfResult();
   };
 
+  const handleLockedModel = (lockedModel: string) => {
+    setModelMenuVisible(false);
+    navigation.navigate("Paywall", {
+      reason: `${modelLabel(lockedModel)} is part of ScanGenAI Pro.`,
+    });
+  };
+
   const handleModelSelect = (selectedModel: string) => {
-    if (selectedModel === "openai") {
-      // Show modal for OpenAI pass
-      setPendingModelSelection(selectedModel);
-      setShowOpenaiPass(false); // Reset visibility state
-      setOpenaiPassModalVisible(true);
-      setModelMenuVisible(false);
-    } else {
-      setModel(selectedModel);
-      setModelMenuVisible(false);
-      setModelError(null);
-      setOpenaiPass(""); // Clear OpenAI pass if switching to another model
-      setShowOpenaiPass(false); // Reset visibility state
-    }
-  };
-
-  const handleOpenaiPassSubmit = () => {
-    if (!openaiPass.trim()) {
-      Alert.alert("OpenAI Pass Required", "Please enter your OpenAI pass.");
-      return;
-    }
-    if (pendingModelSelection) {
-      setModel(pendingModelSelection);
-      setModelError(null);
-      setPendingModelSelection(null);
-    }
-    setOpenaiPassModalVisible(false);
-  };
-
-  const handleOpenaiPassCancel = () => {
-    setOpenaiPass("");
-    setShowOpenaiPass(false);
-    setPendingModelSelection(null);
-    setOpenaiPassModalVisible(false);
+    setModel(selectedModel);
+    setModelMenuVisible(false);
+    setModelError(null);
   };
 
   return (
@@ -321,7 +304,7 @@ const PdfScreen: React.FC = () => {
                         ]}
                         testID="model-dropdown"
                       >
-                        {model || "Select Model *"}
+                        {model ? modelLabel(model) : "Select Model *"}
                       </Button>
                     }
                   >
@@ -329,8 +312,17 @@ const PdfScreen: React.FC = () => {
                       <Menu.Item
                         key={option}
                         onPress={() => handleModelSelect(option)}
-                        title={option.charAt(0).toUpperCase() + option.slice(1)}
+                        title={modelLabel(option)}
                         testID={`model-option-${option}`}
+                      />
+                    ))}
+                    {lockedModels.map((option) => (
+                      <Menu.Item
+                        key={option}
+                        leadingIcon="lock"
+                        onPress={() => handleLockedModel(option)}
+                        title={`${modelLabel(option)} (Pro)`}
+                        testID={`model-option-locked-${option}`}
                       />
                     ))}
                   </Menu>
@@ -369,8 +361,7 @@ const PdfScreen: React.FC = () => {
                   disabled={
                     extracting ||
                     !query.trim() ||
-                    !model ||
-                    (model === "openai" && !openaiPass.trim())
+                    !model
                   }
                   style={styles.extractButton}
                   contentStyle={styles.buttonContent}
@@ -485,7 +476,7 @@ const PdfScreen: React.FC = () => {
                             ]}
                             testID="model-dropdown-followup"
                           >
-                            {model || "Select Model *"}
+                            {model ? modelLabel(model) : "Select Model *"}
                           </Button>
                         }
                       >
@@ -493,10 +484,17 @@ const PdfScreen: React.FC = () => {
                           <Menu.Item
                             key={option}
                             onPress={() => handleModelSelect(option)}
-                            title={
-                              option.charAt(0).toUpperCase() + option.slice(1)
-                            }
+                            title={modelLabel(option)}
                             testID={`model-option-followup-${option}`}
+                          />
+                        ))}
+                        {lockedModels.map((option) => (
+                          <Menu.Item
+                            key={option}
+                            leadingIcon="lock"
+                            onPress={() => handleLockedModel(option)}
+                            title={`${modelLabel(option)} (Pro)`}
+                            testID={`model-option-followup-locked-${option}`}
                           />
                         ))}
                       </Menu>
@@ -534,8 +532,7 @@ const PdfScreen: React.FC = () => {
                       disabled={
                         extracting ||
                         !query.trim() ||
-                        !model ||
-                        (model === "openai" && !openaiPass.trim())
+                        !model
                       }
                       style={styles.extractButton}
                       contentStyle={styles.buttonContent}
@@ -624,16 +621,6 @@ const PdfScreen: React.FC = () => {
       </ScrollView>
 
       <StatusBar style="auto" />
-
-      <OpenaiPassModal
-        visible={openaiPassModalVisible}
-        openaiPass={openaiPass}
-        showOpenaiPass={showOpenaiPass}
-        onOpenaiPassChange={setOpenaiPass}
-        onShowOpenaiPassChange={setShowOpenaiPass}
-        onSubmit={handleOpenaiPassSubmit}
-        onCancel={handleOpenaiPassCancel}
-      />
     </KeyboardAvoidingView>
   );
 };

@@ -6,7 +6,10 @@ import { z } from "zod";
 
 export const ApiErrorSchema = z.object({
   message: z.string().optional(),
-  detail: z.string().optional(),
+  // A string for most errors; FastAPI sends a list of issues for a 422.
+  detail: z
+    .union([z.string(), z.array(z.object({ msg: z.string() }).passthrough())])
+    .optional(),
 });
 
 export type ApiError = z.infer<typeof ApiErrorSchema>;
@@ -55,21 +58,68 @@ export const JobPendingResponseSchema = z.object({
   status: z.literal("pending"),
 });
 
+/** The job ran and failed, or its state could not be read. */
+export const JobFailedResponseSchema = z.object({
+  status: z.enum(["failed", "unknown"]),
+  error: z.string().optional(),
+});
+
+/**
+ * A finished job. Every kind returns `content`; only a PDF answer carries a
+ * `request_id` (for follow-up questions), and the server sends `description`
+ * as null when it has none. Image and audio results carry `filename` instead.
+ */
 export const JobCompletedResponseSchema = z.object({
   content: z.string(),
-  description: z.string(),
-  request_id: z.string(),
+  description: z.string().nullish(),
+  request_id: z.string().nullish(),
 });
 
 export type JobCompletedResponse = z.infer<typeof JobCompletedResponseSchema>;
 
-// Job status can be either pending or completed
+// Job status can be pending, failed or completed
 export const JobStatusResponseSchema = z.union([
   JobPendingResponseSchema,
+  JobFailedResponseSchema,
   JobCompletedResponseSchema,
 ]);
 
 export type JobStatusResponse = z.infer<typeof JobStatusResponseSchema>;
+
+// ============================================
+// Account Schemas
+// ============================================
+
+export const QuotaUsageSchema = z.object({
+  used: z.number(),
+  limit: z.number(),
+});
+
+/**
+ * GET /v1/me. The server decides every field: the plan, which models this
+ * account may use, which need Pro, and what is left of each allowance.
+ */
+export const AccountSchema = z.object({
+  user_id: z.string(),
+  name: z.string(),
+  email: z.string(),
+  login_methods: z.array(z.string()).default([]),
+  pro: z.boolean().default(false),
+  pro_source: z.string().nullish(),
+  pro_product_id: z.string().nullish(),
+  pro_expires_at: z.string().nullish(),
+  purchases_available: z.boolean().default(false),
+  models: z.array(z.string()),
+  pro_models: z.array(z.string()).default([]),
+  usage: z.record(z.string(), QuotaUsageSchema),
+  pro_limits: z.record(z.string(), z.number()).default({}),
+});
+
+export type Account = z.infer<typeof AccountSchema>;
+
+export const MessageResponseSchema = z.object({
+  message: z.string(),
+});
 
 // ============================================
 // Validation Helper
@@ -103,7 +153,11 @@ export function validateResponse<T>(
 export function parseApiError(data: unknown): string {
   const result = ApiErrorSchema.safeParse(data);
   if (result.success) {
-    return result.data.detail || result.data.message || "An error occurred";
+    const { detail, message } = result.data;
+    if (Array.isArray(detail)) {
+      return detail[0]?.msg || message || "An error occurred";
+    }
+    return detail || message || "An error occurred";
   }
   return "An error occurred";
 }

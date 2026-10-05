@@ -14,12 +14,14 @@ import Toast from "react-native-toast-message";
 import { useAppDispatch, useAppSelector } from "../store";
 import { logout } from "../store/slices/authSlice";
 import { useImageExtraction } from "../hooks";
+import { useJobFailure } from "../hooks/useJobFailure";
 import ImagePickerComponent from "../components/ImagePickerComponent";
 import AppHeader from "../components/AppHeader";
 
 const HomeScreen: React.FC = () => {
   const dispatch = useAppDispatch();
   const theme = useTheme();
+  const showFailure = useJobFailure("Extraction Failed");
   const { user } = useAppSelector((state) => state.auth);
   const [image, setImage] = useState<string | null>(null);
 
@@ -42,12 +44,7 @@ const HomeScreen: React.FC = () => {
     }
 
     extractText(image, {
-      onError: (error) => {
-        Alert.alert(
-          "Extraction Failed",
-          error instanceof Error ? error.message : "An error occurred",
-        );
-      },
+      onError: showFailure,
     });
   };
 
@@ -66,7 +63,7 @@ const HomeScreen: React.FC = () => {
         position: "bottom",
         visibilityTime: 2000,
       });
-    } catch (error) {
+    } catch {
       Toast.show({
         type: "error",
         text1: "Failed to copy text",

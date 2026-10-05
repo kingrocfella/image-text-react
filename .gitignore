@@ -21,3 +21,8 @@ web-build/
 # macOS
 .DS_Store
 
+
+# Firebase / Google services config: holds an API key. Supplied to EAS as a
+# file secret, never committed (this repository is public).
+google-services.json
+GoogleService-Info.plist

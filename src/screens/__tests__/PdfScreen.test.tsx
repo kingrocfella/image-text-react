@@ -21,17 +21,24 @@ jest.mock("../../components/MarkdownRenderer", () => {
   );
 });
 
-jest.mock("../../components/OpenaiPassModal", () => {
-  const React = require("react");
-  const { View } = require("react-native");
-  return () => <View testID="openai-pass-modal" />;
-});
+jest.mock("@tanstack/react-query", () => ({
+  useQueryClient: () => ({ invalidateQueries: jest.fn() }),
+}));
 
 const mockMutate = jest.fn();
 const mockReset = jest.fn();
 
 jest.mock("../../hooks", () => ({
+  ACCOUNT_QUERY_KEY: ["account"],
   usePdfExtraction: jest.fn(),
+  // The model list comes from the server (GET /v1/me).
+  useAccount: () => ({
+    data: {
+      models: ["ollama", "gemini", "deepseek"],
+      pro_models: ["claude", "openai"],
+      usage: {},
+    },
+  }),
 }));
 
 jest.mock("expo-document-picker", () => ({

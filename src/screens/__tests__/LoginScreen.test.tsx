@@ -15,6 +15,9 @@ jest.mock('../../store/slices/authSlice', () => ({
     fulfilled: { match: jest.fn(() => false) },
     rejected: { match: jest.fn(() => false) },
   }),
+  resendVerification: Object.assign(jest.fn((email: string) => ({ type: 'auth/resendVerification', email })), {
+    fulfilled: { match: jest.fn(() => true) },
+  }),
 }));
 
 jest.mock('react-native-paper', () => {
@@ -147,5 +150,46 @@ describe('LoginScreen', () => {
     const { getByTestId, navigation } = await renderLoginScreen();
     await fireEvent.press(getByTestId('register-link'));
     expect(navigation.navigate).toHaveBeenCalledWith('Register');
+  });
+});
+
+describe('LoginScreen account recovery', () => {
+  it('opens the forgot-password screen with the typed email', async () => {
+    const { getByTestId, navigation } = await renderLoginScreen();
+    await fireEvent.changeText(getByTestId('email-input'), 'user@example.com');
+
+    await fireEvent.press(getByTestId('forgot-password-link'));
+
+    expect(navigation.navigate).toHaveBeenCalledWith('ForgotPassword', {
+      email: 'user@example.com',
+    });
+  });
+
+  it('offers to resend the verification email when the account is unverified', async () => {
+    const { login: mockedLogin, resendVerification } = jest.requireMock(
+      '../../store/slices/authSlice',
+    );
+    mockedLogin.rejected.match.mockReturnValueOnce(true);
+    mockDispatch
+      .mockResolvedValueOnce({ payload: 'Email not verified' })
+      .mockResolvedValueOnce({ payload: 'A new verification email is on its way.' });
+    const { getByTestId } = await renderLoginScreen();
+    await fireEvent.changeText(getByTestId('email-input'), 'user@example.com');
+    await fireEvent.changeText(getByTestId('password-input'), 'secret123');
+
+    await act(async () => {
+      await fireEvent.press(getByTestId('login-button'));
+    });
+
+    const [title, , buttons] = alertSpy.mock.calls[0];
+    expect(title).toBe('Verify Your Email');
+    const resend = buttons.find((b: { text: string }) => b.text === 'Resend Email');
+
+    await act(async () => {
+      await resend.onPress();
+    });
+
+    expect(resendVerification).toHaveBeenCalledWith('user@example.com');
+    expect(alertSpy.mock.calls[1][0]).toBe('Check Your Inbox');
   });
 });

@@ -2,10 +2,18 @@
   "expo": {
     "name": "ScanGenAI",
     "slug": "ScanGenAI",
-    "version": "1.0.1",
+    "version": "1.1.0",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/01ff9db2-9e1f-4524-a218-8998eef6a3ee",
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0
+    },
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "assetBundlePatterns": [
       "**/*"
     ],
@@ -13,9 +21,12 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.leonfrontier.scangenai",
       "infoPlist": {
-        "NSCameraUsageDescription": "This app needs access to your camera to take pictures.",
-        "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to select images."
-      }
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSCameraUsageDescription": "ScanGenAI uses the camera to photograph text you want to extract.",
+        "NSPhotoLibraryUsageDescription": "ScanGenAI reads the photos you choose so it can extract their text.",
+        "NSMicrophoneUsageDescription": "ScanGenAI uses the microphone to record audio you want transcribed."
+      },
+      "usesAppleSignIn": true
     },
     "android": {
       "adaptiveIcon": {
@@ -24,10 +35,15 @@
       },
       "permissions": [
         "android.permission.CAMERA",
-        "android.permission.READ_EXTERNAL_STORAGE",
-        "android.permission.WRITE_EXTERNAL_STORAGE"
+        "android.permission.RECORD_AUDIO"
       ],
-      "package": "com.leonfrontier.scangenai"
+      "package": "com.leonfrontier.scangenai",
+      "blockedPermissions": [
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.READ_MEDIA_VIDEO",
+        "android.permission.READ_MEDIA_AUDIO",
+        "android.permission.SYSTEM_ALERT_WINDOW"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -38,8 +54,24 @@
       }
     },
     "plugins": [
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "enableMinifyInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true
+          }
+        }
+      ],
+      "./plugins/with-ios-modular-headers",
+      "expo-apple-authentication",
       "expo-asset",
-      "expo-audio",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "ScanGenAI uses the microphone to record audio you want transcribed."
+        }
+      ],
       "expo-status-bar",
       "expo-font",
       [
@@ -48,6 +80,15 @@
           "image": "./assets/splash.png",
           "resizeMode": "contain",
           "backgroundColor": "#070B2E"
+        }
+      ],
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "ScanGenAI reads the photos you choose so it can extract their text.",
+          "cameraPermission": "ScanGenAI uses the camera to photograph text you want to extract.",
+          "microphonePermission": false
         }
       ]
     ]

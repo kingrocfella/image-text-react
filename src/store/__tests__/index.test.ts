@@ -128,7 +128,7 @@ describe("Redux Store", () => {
           tokenType: "Bearer",
         },
         theme: {
-          mode: "dark" as const,
+          mode: "dark" as "dark" | "light",
         },
       };
 

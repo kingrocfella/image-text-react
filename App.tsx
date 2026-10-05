@@ -1,12 +1,28 @@
 import React, { useEffect } from "react";
+import { Alert, Linking, Platform, StyleSheet, View } from "react-native";
+import { ErrorBoundary } from "react-error-boundary";
 import { Provider } from "react-redux";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { PaperProvider, MD3LightTheme, MD3DarkTheme } from "react-native-paper";
+import {
+  Button,
+  PaperProvider,
+  MD3LightTheme,
+  MD3DarkTheme,
+  Text,
+} from "react-native-paper";
 import Toast from "react-native-toast-message";
 import { useColorScheme } from "react-native";
 import { store, useAppDispatch, useAppSelector } from "./src/store";
 import AppNavigator from "./src/navigation/AppNavigator";
 import { loadThemeModeFromStorage } from "./src/store/slices/themeSlice";
+import { restoreSession } from "./src/store/slices/authSlice";
+import { setUpdateRequiredHandler } from "./src/api/http";
+import { STORE_URLS } from "./src/constants";
+import { createMobileLogger } from "./src/logging/logger";
+import { startRemoteMobileLogging } from "./src/logging/remote";
+import { BillingBootstrap } from "./src/billing/BillingBootstrap";
+
+const logger = createMobileLogger("app");
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -15,7 +31,8 @@ const queryClient = new QueryClient({
       staleTime: 5 * 60 * 1000, // 5 minutes
     },
     mutations: {
-      retry: 1,
+      // A retried mutation would upload the same file twice.
+      retry: false,
     },
   },
 });
@@ -72,7 +89,30 @@ const AppContent: React.FC = () => {
 
   useEffect(() => {
     dispatch(loadThemeModeFromStorage());
+    dispatch(restoreSession());
   }, [dispatch]);
+
+  useEffect(() => startRemoteMobileLogging(), []);
+
+  useEffect(() => {
+    // HTTP 426: the server no longer serves this build. Say so once, rather
+    // than letting every request fail with a message that explains nothing.
+    let shown = false;
+    setUpdateRequiredHandler(() => {
+      if (shown) return;
+      shown = true;
+      const storeUrl = Platform.OS === "ios" ? STORE_URLS.ios : STORE_URLS.android;
+      Alert.alert(
+        "Update Required",
+        "This version of ScanGenAI is no longer supported. Please update to continue.",
+        storeUrl
+          ? [{ text: "Update", onPress: () => Linking.openURL(storeUrl) }]
+          : [{ text: "OK" }],
+        { onDismiss: () => (shown = false) },
+      );
+    });
+    return () => setUpdateRequiredHandler(null);
+  }, []);
 
   const getTheme = () => {
     if (themeMode === "system") {
@@ -85,18 +125,54 @@ const AppContent: React.FC = () => {
 
   return (
     <PaperProvider theme={theme}>
+      <BillingBootstrap />
       <AppNavigator />
       <Toast />
     </PaperProvider>
   );
 };
 
+const CrashScreen: React.FC<{ resetErrorBoundary: () => void }> = ({
+  resetErrorBoundary,
+}) => (
+  <View style={styles.crash}>
+    <Text variant="headlineSmall" style={styles.crashTitle}>
+      Something went wrong
+    </Text>
+    <Text variant="bodyMedium" style={styles.crashBody}>
+      The app hit an unexpected problem. Your account and files are safe.
+    </Text>
+    <Button mode="contained" onPress={resetErrorBoundary} testID="crash-retry">
+      Try Again
+    </Button>
+  </View>
+);
+
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Provider store={store}>
-        <AppContent />
+        <PaperProvider>
+          {/* A render error used to leave a blank white screen with no way out. */}
+          <ErrorBoundary
+            FallbackComponent={CrashScreen}
+            onError={(error, info) =>
+              logger.error("render_crash", "Unhandled render error", {
+                error,
+                stack: info.componentStack ?? undefined,
+              })
+            }
+          >
+            <AppContent />
+          </ErrorBoundary>
+        </PaperProvider>
       </Provider>
     </QueryClientProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  crash: { flex: 1, alignItems: "center", justifyContent: "center", padding: 32 },
+  crashTitle: { marginBottom: 12, textAlign: "center" },
+  crashBody: { marginBottom: 24, textAlign: "center" },
+});

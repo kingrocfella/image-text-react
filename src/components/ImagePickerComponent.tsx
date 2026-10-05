@@ -2,6 +2,7 @@ import React from "react";
 import { View, Alert, StyleSheet } from "react-native";
 import { Button } from "react-native-paper";
 import * as ImagePicker from "expo-image-picker";
+import { tooLargeMessage } from "../utils/uploadLimits";
 
 interface ImagePickerComponentProps {
   onImageSelected: (uri: string) => void;
@@ -10,6 +11,15 @@ interface ImagePickerComponentProps {
 const ImagePickerComponent: React.FC<ImagePickerComponentProps> = ({
   onImageSelected,
 }) => {
+  const selectAsset = (asset: ImagePicker.ImagePickerAsset) => {
+    const tooLarge = tooLargeMessage("imageBytes", asset.fileSize);
+    if (tooLarge) {
+      Alert.alert("Image Too Large", tooLarge);
+      return;
+    }
+    onImageSelected(asset.uri);
+  };
+
   const requestCameraPermission = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== "granted") {
@@ -30,11 +40,11 @@ const ImagePickerComponent: React.FC<ImagePickerComponentProps> = ({
       mediaTypes: "images",
       allowsEditing: true,
       aspect: [4, 3],
-      quality: 1,
+      quality: 0.9,
     });
 
     if (!result.canceled && result.assets[0]) {
-      onImageSelected(result.assets[0].uri);
+      selectAsset(result.assets[0]);
     }
   };
 
@@ -43,11 +53,11 @@ const ImagePickerComponent: React.FC<ImagePickerComponentProps> = ({
       mediaTypes: "images",
       allowsEditing: true,
       aspect: [4, 3],
-      quality: 1,
+      quality: 0.9,
     });
 
     if (!result.canceled && result.assets[0]) {
-      onImageSelected(result.assets[0].uri);
+      selectAsset(result.assets[0]);
     }
   };
 

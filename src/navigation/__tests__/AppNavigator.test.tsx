@@ -114,6 +114,30 @@ jest.mock("../../screens/PdfScreen", () => {
   };
 });
 
+jest.mock("../../screens/AccountScreen", () => {
+  const React = require("react");
+  const { View } = require("react-native");
+  return function MockAccountScreen() {
+    return React.createElement(View, { testID: "account-screen" });
+  };
+});
+
+jest.mock("../../screens/PaywallScreen", () => {
+  const React = require("react");
+  const { View } = require("react-native");
+  return function MockPaywallScreen() {
+    return React.createElement(View, { testID: "paywall-screen" });
+  };
+});
+
+jest.mock("../../screens/ForgotPasswordScreen", () => {
+  const React = require("react");
+  const { View } = require("react-native");
+  return function MockForgotPasswordScreen() {
+    return React.createElement(View, { testID: "forgot-password-screen" });
+  };
+});
+
 jest.mock("../../screens/SoundScreen", () => {
   const React = require("react");
   const { View, Text } = require("react-native");

@@ -1,8 +1,5 @@
-import { useMutation } from "@tanstack/react-query";
 import { extractTextFromImage } from "../api/client";
+import { useCancellableJob } from "./useCancellableJob";
 
-export const useImageExtraction = () => {
-  return useMutation({
-    mutationFn: extractTextFromImage,
-  });
-};
+export const useImageExtraction = () =>
+  useCancellableJob<string, string>(extractTextFromImage);

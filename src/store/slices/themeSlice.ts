@@ -24,7 +24,7 @@ export const setThemeModePersisted = createAsyncThunk<ThemeMode, ThemeMode>(
     try {
       await AsyncStorage.setItem(THEME_STORAGE_KEY, mode);
     } catch (error) {
-      logger.error("Failed to save theme mode", error);
+      logger.warn("theme_save_failed", "Failed to save theme mode", { error });
     }
     return mode;
   }
@@ -42,7 +42,7 @@ export const loadThemeModeFromStorage = createAsyncThunk<ThemeMode | null, void>
         return savedMode as ThemeMode;
       }
     } catch (error) {
-      logger.error("Failed to load theme mode", error);
+      logger.warn("theme_load_failed", "Failed to load theme mode", { error });
     }
     return null;
   }

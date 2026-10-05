@@ -1,8 +1,5 @@
-import { useMutation } from "@tanstack/react-query";
 import { transcribeAudio } from "../api/client";
+import { useCancellableJob } from "./useCancellableJob";
 
-export const useAudioTranscription = () => {
-  return useMutation({
-    mutationFn: transcribeAudio,
-  });
-};
+export const useAudioTranscription = () =>
+  useCancellableJob<string, string>(transcribeAudio);

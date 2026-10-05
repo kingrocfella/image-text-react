@@ -179,12 +179,21 @@ describe("API Schemas", () => {
       }
     });
 
-    it("rejects completed response with missing fields", () => {
-      const data = {
-        content: "Some content",
-        // missing description and request_id
-      };
+    it("accepts an image or audio result, which has only content", () => {
+      // The server returns {content, filename, segments_count} for these; the
+      // schema used to demand description and request_id and rejected them all.
+      const data = { content: "Some content", filename: "a.png" };
       const result = JobCompletedResponseSchema.safeParse(data);
+      expect(result.success).toBe(true);
+    });
+
+    it("accepts a null description", () => {
+      const data = { content: "Answer", description: null, request_id: "r1" };
+      expect(JobCompletedResponseSchema.safeParse(data).success).toBe(true);
+    });
+
+    it("rejects a result with no content", () => {
+      const result = JobCompletedResponseSchema.safeParse({ request_id: "r1" });
       expect(result.success).toBe(false);
     });
   });

@@ -12,19 +12,21 @@ import {
   Text,
   TextInput,
   Button,
-  Card,
   Surface,
   useTheme,
 } from "react-native-paper";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useAppDispatch, useAppSelector } from "../store";
-import { login } from "../store/slices/authSlice";
-import { getEmailError, getPasswordError } from "../utils/validation";
+import { login, resendVerification } from "../store/slices/authSlice";
+import { getEmailError, getLoginPasswordError } from "../utils/validation";
+import { EMAIL_NOT_VERIFIED_DETAIL, LEGAL_URLS } from "../constants";
 import AppLogo from "../components/AppLogo";
+import SocialSignIn from "../components/SocialSignIn";
 
 type RootStackParamList = {
   Login: undefined;
   Register: undefined;
+  ForgotPassword: { email?: string } | undefined;
   Home: undefined;
 };
 
@@ -50,7 +52,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
   const validateForm = (): boolean => {
     const emailErr = getEmailError(email);
-    const passwordErr = getPasswordError(password);
+    const passwordErr = getLoginPasswordError(password);
 
     setEmailError(emailErr);
     setPasswordError(passwordErr);
@@ -65,8 +67,27 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
     const result = await dispatch(login({ email, password }));
     if (login.rejected.match(result)) {
+      if (result.payload === EMAIL_NOT_VERIFIED_DETAIL) {
+        Alert.alert(
+          "Verify Your Email",
+          "Open the link in the email we sent you, then sign in. Can't find it?",
+          [
+            { text: "Cancel", style: "cancel" },
+            { text: "Resend Email", onPress: handleResendVerification },
+          ],
+        );
+        return;
+      }
       Alert.alert("Login Failed", result.payload || "An error occurred");
     }
+  };
+
+  const handleResendVerification = async () => {
+    const result = await dispatch(resendVerification(email));
+    Alert.alert(
+      resendVerification.fulfilled.match(result) ? "Check Your Inbox" : "Not Sent",
+      (result.payload as string | undefined) || "An error occurred",
+    );
   };
 
   return (
@@ -173,21 +194,30 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
                 Login
               </Button>
 
+              <SocialSignIn mode="sign-in" />
+
+              <Button
+                mode="text"
+                onPress={() => navigation.navigate("ForgotPassword", { email })}
+                style={styles.privacyButton}
+                testID="forgot-password-link"
+              >
+                Forgot password?
+              </Button>
+
               <Button
                 mode="text"
                 onPress={() => navigation.navigate("Register")}
                 style={styles.linkButton}
                 testID="register-link"
               >
-                Don't have an account?{" "}
+                Don&apos;t have an account?{" "}
                 <Text style={{ fontWeight: "bold" }}>Register</Text>
               </Button>
 
               <Button
                 mode="text"
-                onPress={() =>
-                  Linking.openURL("https://leonfrontier.com/scangenai/privacy")
-                }
+                onPress={() => Linking.openURL(LEGAL_URLS.privacy)}
                 style={styles.privacyButton}
                 icon="shield-check"
                 testID="privacy-policy-link"

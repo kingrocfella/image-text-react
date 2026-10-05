@@ -19,13 +19,16 @@ import {
   AudioModule,
 } from "expo-audio";
 import { useAudioTranscription } from "../hooks";
+import { useJobFailure } from "../hooks/useJobFailure";
 import AppHeader from "../components/AppHeader";
 import { createMobileLogger } from "../logging/logger";
+import { tooLargeMessage } from "../utils/uploadLimits";
 
 const logger = createMobileLogger("sound-screen");
 
 const SoundScreen: React.FC = () => {
   const theme = useTheme();
+  const showFailure = useJobFailure("Transcription Failed");
   const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const recorderState = useAudioRecorderState(audioRecorder);
   const [audioUri, setAudioUri] = useState<string | null>(null);
@@ -75,7 +78,7 @@ const SoundScreen: React.FC = () => {
       setRecordingDuration(0);
     } catch (error) {
       Alert.alert("Error", "Failed to start recording");
-      logger.error("Failed to start recording", error);
+      logger.error("record_start_failed", "Failed to start recording", { error });
     }
   };
 
@@ -88,7 +91,7 @@ const SoundScreen: React.FC = () => {
       }
     } catch (error) {
       Alert.alert("Error", "Failed to stop recording");
-      logger.error("Failed to stop recording", error);
+      logger.error("record_stop_failed", "Failed to stop recording", { error });
     }
   };
 
@@ -101,12 +104,17 @@ const SoundScreen: React.FC = () => {
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
         const asset = result.assets[0];
+        const tooLarge = tooLargeMessage("audioBytes", asset.size);
+        if (tooLarge) {
+          Alert.alert("File Too Large", tooLarge);
+          return;
+        }
         setAudioUri(asset.uri);
         setAudioFileName(asset.name || "audio.m4a");
         setRecordingDuration(0);
         clearTranscribedText();
       }
-    } catch (error) {
+    } catch {
       Alert.alert("Error", "Failed to pick audio file");
     }
   };
@@ -118,12 +126,7 @@ const SoundScreen: React.FC = () => {
     }
 
     transcribe(audioUri, {
-      onError: (error) => {
-        Alert.alert(
-          "Transcription Failed",
-          error instanceof Error ? error.message : "An error occurred",
-        );
-      },
+      onError: showFailure,
     });
   };
 
@@ -138,7 +141,7 @@ const SoundScreen: React.FC = () => {
         position: "bottom",
         visibilityTime: 2000,
       });
-    } catch (error) {
+    } catch {
       Toast.show({
         type: "error",
         text1: "Failed to copy text",
