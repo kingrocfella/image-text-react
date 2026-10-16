@@ -15,7 +15,7 @@ declare const __DEV__: boolean;
 
 export const APP_NAME = "ScanGenAI";
 /** Sent as X-App-Version on every API call. Must equal app.json `expo.version`. */
-export const APP_VERSION = "1.1.0";
+export const APP_VERSION = "1.1.1";
 export const APP_VERSION_HEADER = "X-App-Version";
 export const EAS_PROJECT_ID = "01ff9db2-9e1f-4524-a218-8998eef6a3ee";
 
